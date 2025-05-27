@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: fitgear-back
+  datasource:
+    url: jdbc:mysql://localhost:3306/fitGearBack?createDatabaseIfNotExist=true
+    username: root
+    password: salmen25
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect

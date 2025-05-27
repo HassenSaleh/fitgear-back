@@ -1,4 +1,4 @@
 package com.ecommerce.fitgearback.exceptions;
 
-public class DuplicateUserException {
+public class DuplicateUserException extends RuntimeException {
 }
