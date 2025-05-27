@@ -1,12 +1,14 @@
 package com.ecommerce.fitgearback.services;
 
 import com.ecommerce.fitgearback.dtos.*;
+import com.ecommerce.fitgearback.mappers.UserMapper;
 import com.ecommerce.fitgearback.models.*;
 import com.ecommerce.fitgearback.repositories.RoleRepository;
 import com.ecommerce.fitgearback.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
@@ -19,28 +21,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
     public User findByEmail(String email) {
         return userRepository.findByEmail(email);
-    }
-
-    public User registerCustomer(@NotNull CustomerDto dto) {
-        Customer customer = new Customer();
-        customer.setEmail(dto.getEmail());
-        customer.setPassword(passwordEncoder.encode(dto.getPassword()));
-        customer.setFirstName(dto.getFirstName());
-        customer.setLastName(dto.getLastName());
-        customer.setShippingAddress(dto.getShippingAddress());
-        customer.setPhoneNumber(dto.getPhoneNumber());
-
-        Role role = roleRepository.findByName("CUSTOMER")
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        customer.setRoles(Set.of(role));
-
-        return userRepository.save(customer);
     }
 
     public User registerVendor(@NotNull VendorDto dto) {
