@@ -1,5 +1,6 @@
 package com.ecommerce.fitgearback.controllers;
 
+import com.ecommerce.fitgearback.Configurations.JwtConfig;
 import com.ecommerce.fitgearback.dtos.CustomerResponseDto;
 import com.ecommerce.fitgearback.dtos.UserDto;
 import com.ecommerce.fitgearback.dtos.login.JwtRequest;
@@ -11,6 +12,8 @@ import com.ecommerce.fitgearback.models.Admin;
 import com.ecommerce.fitgearback.repositories.CustomerRepository;
 import com.ecommerce.fitgearback.repositories.UserRepository;
 import com.ecommerce.fitgearback.services.JwtService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,10 +38,12 @@ public class AuthController {
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
     private final UserMapper mapper;
+    private final JwtConfig config;
 
-    @PostMapping("login")
+    @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(
-            @Valid @RequestBody LoginRequest request){
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse response){
                 authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -46,42 +51,32 @@ public class AuthController {
                 )
         );
                 var user = userRepository.findByEmail(request.getEmail()).orElseThrow();
-                var token = jwtService.generateToken(user);
-        return ResponseEntity.ok(new JwtResponse(token));
+                var accessToken = jwtService.generateAccessToken(user);
+                var refreshToken = jwtService.generateRefreshToken(user);
+
+                var cookie = new Cookie("refreshToken", refreshToken);
+                cookie.setHttpOnly(true);
+                cookie.setPath("/auth/refresh");
+                cookie.setMaxAge(config.getRefreshTokenExpiration());
+                cookie.setSecure(true);
+                response.addCookie(cookie);
+        return ResponseEntity.ok(new JwtResponse(accessToken));
     }
 
-    @PostMapping("/validate")
-    public boolean validate(@RequestHeader("Authorization") String authHeader) {
-        var authToken = authHeader.replace("Bearer ", "");
-        return jwtService.validateToken(authToken);
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtResponse> refresh(
+            @CookieValue("refreshToken") String refreshToken
+    ){
+        if(!jwtService.validateToken(refreshToken)){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        var userId = jwtService.getUserIdFromToken(refreshToken);
+        var user = userRepository.findById(userId).orElseThrow();
+        var accessToken = jwtService.generateAccessToken(user);
+        return ResponseEntity.ok(new JwtResponse(accessToken));
     }
 
-//    @GetMapping("/email")
-//    public String getEmail(@RequestHeader("Authorization") String authHeader) {
-//        var authToken = authHeader.replace("Bearer ", "");
-//        return jwtService.getUserIdFromToken(authToken);
-//    }
-//    @GetMapping("/logout")
-//    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader) {
-//        var authToken = authHeader.replace("Bearer ", "");
-//        jwtService.deleteToken(authToken);
-//        return ResponseEntity.noContent().build();
-//    }
-
-//    @GetMapping("/refresh")
-//    public ResponseEntity<JwtResponse> refreshToken(@RequestHeader("Authorization") String authHeader) {
-//        var authToken = authHeader.replace("Bearer ", "");
-//        var email = jwtService.getEmailFromToken(authToken);
-//        var token = jwtService.generateToken(email);
-//        return ResponseEntity.ok(new JwtResponse(token));
-//    }
-//    @PostMapping("/signup")
-//    public ResponseEntity<LoginResponse> signUp(@Valid @RequestBody LoginRequest loginRequest){
-//        return ResponseEntity.ok(new LoginResponse(loginRequest.getEmail()));
-//    }
-
-
-    //ror customer only
+    //for customer only
     @GetMapping("/test")
     public ResponseEntity<CustomerResponseDto> test(){
         var auth = SecurityContextHolder.getContext().getAuthentication();

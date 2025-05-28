@@ -5,6 +5,8 @@ spring:
     name: fitgear-back
   jwt:
     secret: ${JWT_SECRET}
+    accessTokenExpiration: 300
+    refreshTokenExpiration: 604800
   main:
     allow-circular-references: true
   datasource:
