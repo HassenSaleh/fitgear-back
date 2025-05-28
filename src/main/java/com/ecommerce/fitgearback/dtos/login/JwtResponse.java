@@ -10,10 +10,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class JwtLoginResponse {
-    private String accessToken;
-    private String refreshToken;
-    private String role;
-    private Long userId;
-    private String email;
+public class JwtResponse {
+    private String token;
+//    private String refreshToken;
+//    private String role;
+//    private Long userId;
+//    private String email;
 }

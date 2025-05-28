@@ -8,17 +8,22 @@ import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
 import com.ecommerce.fitgearback.mappers.UserMapper;
 import com.ecommerce.fitgearback.models.Customer;
 import com.ecommerce.fitgearback.models.Role;
-import com.ecommerce.fitgearback.models.Vendor;
 import com.ecommerce.fitgearback.repositories.CustomerRepository;
 import com.ecommerce.fitgearback.repositories.RoleRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.validator.internal.util.stereotypes.Lazy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,11 +32,22 @@ import java.util.stream.Collectors;
 @Setter
 @Getter
 @Service
-public class CustomerService {
+public class CustomerService implements UserDetailsService {
+
     private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper customerMapper;
     private final RoleRepository roleRepository;
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        var user = customerRepository.findByEmail(email)
+                .orElseThrow(()-> new UsernameNotFoundException("User not found with email: " + email));
+        return new User(
+                user.getEmail(),
+                user.getPassword(),
+                Collections.emptyList()
+        );
+    }
 
     public CustomerResponseDto registerCustomer(CustomerDto dto) {
         Customer customer = customerMapper.toCustomer(dto);

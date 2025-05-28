@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class JwtLoginRequest {
+public class JwtRequest {
     @NotBlank(message = "Email is required")
     @Email
     private String email;

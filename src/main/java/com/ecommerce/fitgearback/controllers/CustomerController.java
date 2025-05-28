@@ -28,7 +28,7 @@ public class CustomerController {
     private final CustomerService customerService;
     private final UserMapper userMapper;
 
-    @PostMapping("/register")
+    @PostMapping()
     public ResponseEntity<CustomerResponseDto> registerCustomer(@Valid @RequestBody CustomerDto dto) {
         CustomerResponseDto responseDto = customerService.registerCustomer(dto);
         if (responseDto != null) {

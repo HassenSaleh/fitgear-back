@@ -3,7 +3,8 @@ spring:
     default-property-inclusion: non_null
   application:
     name: fitgear-back
-
+  main:
+    allow-circular-references: true
   datasource:
     url: jdbc:mysql://localhost:3306/fitGearBack?createDatabaseIfNotExist=true
     username: root
