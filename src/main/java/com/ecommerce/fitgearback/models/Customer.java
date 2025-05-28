@@ -2,7 +2,6 @@ package com.ecommerce.fitgearback.models;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 @Entity
 @Table(name = "customers")
 @PrimaryKeyJoinColumn(name = "id")
@@ -16,6 +15,4 @@ public class Customer extends User{
     private String shippingAddress;
 
     private String phoneNumber;
-
-
 }

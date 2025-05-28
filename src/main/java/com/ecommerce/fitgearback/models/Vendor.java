@@ -12,7 +12,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Vendor extends User {
+public class Vendor extends User  {
 
     private String companyName;
 

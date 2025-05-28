@@ -8,8 +8,8 @@ import lombok.*;
 @AllArgsConstructor
 public class AdminResponseDto {
     private Long id;
-    private String email;
     private String firstName;
     private String lastName;
+    private String email;
     private String department;
 }

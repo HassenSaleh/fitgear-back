@@ -1,6 +1,8 @@
 package com.ecommerce.fitgearback.dtos;
 
 import com.ecommerce.fitgearback.models.Vendor;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Setter
@@ -8,11 +10,18 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VendorDto {
-    private String email;
-    private String password;
+    @NotBlank
     private String firstName;
+    @NotBlank
     private String lastName;
+    @Email
+    private String email;
+    @NotBlank
+    private String password;
+    @NotBlank
     private String companyName;
+    @NotBlank
     private String companyAddress;
+    @NotBlank
     private String contactNumber;
 }

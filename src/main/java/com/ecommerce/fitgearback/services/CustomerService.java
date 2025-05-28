@@ -2,20 +2,21 @@ package com.ecommerce.fitgearback.services;
 
 import com.ecommerce.fitgearback.dtos.CustomerDto;
 import com.ecommerce.fitgearback.dtos.CustomerResponseDto;
-import com.ecommerce.fitgearback.mappers.CustomerMapper;
+import com.ecommerce.fitgearback.dtos.login.LoginRequestDto;
+import com.ecommerce.fitgearback.dtos.login.LoginResponseDto;
+import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
 import com.ecommerce.fitgearback.mappers.UserMapper;
 import com.ecommerce.fitgearback.models.Customer;
 import com.ecommerce.fitgearback.models.Role;
+import com.ecommerce.fitgearback.models.Vendor;
 import com.ecommerce.fitgearback.repositories.CustomerRepository;
 import com.ecommerce.fitgearback.repositories.RoleRepository;
-import com.ecommerce.fitgearback.repositories.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
 
 import java.net.URI;
 import java.util.List;
@@ -43,11 +44,55 @@ public class CustomerService {
         return customerMapper.toCustomerResponseDTO(saved);
     }
 
+    public CustomerResponseDto updateCustomer(Long id, CustomerDto dto) {
+        Customer existing = customerRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
+
+        existing.setFirstName(dto.getFirstName());
+        existing.setLastName(dto.getLastName());
+        existing.setEmail(dto.getEmail());
+        existing.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        Customer updated = customerRepository.save(existing);
+        return customerMapper.toCustomerResponseDTO(updated);
+    }
+    public void deleteCustomer(Long id) {
+        if (!customerRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Customer not found: " + id);
+        }
+        customerRepository.deleteById(id);
+    }
+
+    public CustomerResponseDto getById(Long id) {
+        Customer customer = customerRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
+        return customerMapper.toCustomerResponseDTO(customer);
+    }
 
     public List<CustomerResponseDto> getAllCustomers() {
-        return customerRepository.findAll()
+        return customerRepository
+                .findAll()
                 .stream()
                 .map(customerMapper::toCustomerResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    public LoginResponseDto login(LoginRequestDto loginRequest) {
+        Customer customer = customerRepository
+                .findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with email: " + loginRequest.getEmail()));
+
+        if (passwordEncoder.matches(loginRequest.getPassword(), customer.getPassword())) {
+            return new LoginResponseDto(
+                    customer.getId(),
+                    customer.getEmail(),
+                    "CUSTOMER",
+                    "Login successful"
+            );
+        } else {
+            throw new RuntimeException("Invalid credentials");
+        }
     }
 }

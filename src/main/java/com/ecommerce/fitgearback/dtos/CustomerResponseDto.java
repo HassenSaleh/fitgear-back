@@ -10,9 +10,9 @@ import lombok.*;
 public class CustomerResponseDto{
 
     private Long id;
-    private String email;
     private String firstName;
     private String lastName;
+    private String email;
     private String phoneNumber;
     private String shippingAddress;
 

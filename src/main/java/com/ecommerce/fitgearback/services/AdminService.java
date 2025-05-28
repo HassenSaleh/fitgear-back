@@ -2,7 +2,9 @@ package com.ecommerce.fitgearback.services;
 
 import com.ecommerce.fitgearback.dtos.AdminDto;
 import com.ecommerce.fitgearback.dtos.AdminResponseDto;
-import com.ecommerce.fitgearback.mappers.AdminMapper;
+import com.ecommerce.fitgearback.dtos.login.LoginRequestDto;
+import com.ecommerce.fitgearback.dtos.login.LoginResponseDto;
+import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
 import com.ecommerce.fitgearback.mappers.UserMapper;
 import com.ecommerce.fitgearback.models.Admin;
 
@@ -15,6 +17,7 @@ import lombok.Setter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 
 @Setter
@@ -37,4 +40,52 @@ public class AdminService {
         Admin saved = adminRepository.save(admin);
         return adminMapper.toAdminResponseDTO(saved);
     }
+
+    public AdminResponseDto updateAdmin(Long id, AdminDto dto) {
+        Admin existing = adminRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + id));
+        existing.setFirstName(dto.getFirstName());
+        existing.setLastName(dto.getLastName());
+        existing.setEmail(dto.getEmail());
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            existing.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        Admin updated = adminRepository.save(existing);
+        return adminMapper.toAdminResponseDTO(updated);
+    }
+
+    public void deleteAdmin(Long id) {
+        adminRepository.deleteById(id);
+    }
+
+    public AdminResponseDto getAdminById(Long id) {
+        Admin admin = adminRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + id));
+        return adminMapper.toAdminResponseDTO(admin);
+    }
+
+    public List<AdminResponseDto> getAllAdmins() {
+        return adminRepository.findAll().stream()
+                .map(adminMapper::toAdminResponseDTO)
+                .toList();
+    }
+
+    public LoginResponseDto login(LoginRequestDto loginRequest) {
+        Admin admin = adminRepository
+                .findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with email: " + loginRequest.getEmail()));
+
+        if (passwordEncoder.matches(loginRequest.getPassword(), admin.getPassword())) {
+            return new LoginResponseDto(
+                    admin.getId(),
+                    admin.getEmail(),
+                    "ADMIN",
+                    "Login successful"
+            );
+        } else {
+            throw new RuntimeException("Invalid credentials");
+        }
+    }
+
 }

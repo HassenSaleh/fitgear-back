@@ -12,9 +12,9 @@ import java.util.Set;
 @Mapper(componentModel = "spring")
 public class VendorResponseDto {
     private Long id;
-    private String email;
     private String firstName;
     private String lastName;
+    private String email;
     private String companyName;
     private String companyAddress;
     private String contactNumber;

@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "categories")
+@Table(name = "products")
 @Setter
 @Getter
 @NoArgsConstructor
@@ -16,7 +16,6 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
     private String description;
     private BigDecimal price;
@@ -27,7 +26,7 @@ public class Product {
     @JoinColumn(name = "vendor_id")
     private Vendor vendor;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "category_id")
     private Category category;
 }

@@ -1,7 +1,10 @@
 package com.ecommerce.fitgearback.controllers;
 
+import com.ecommerce.fitgearback.dtos.AdminResponseDto;
 import com.ecommerce.fitgearback.dtos.CustomerDto;
 import com.ecommerce.fitgearback.dtos.CustomerResponseDto;
+import com.ecommerce.fitgearback.dtos.login.LoginRequestDto;
+import com.ecommerce.fitgearback.dtos.login.LoginResponseDto;
 import com.ecommerce.fitgearback.mappers.UserMapper;
 import com.ecommerce.fitgearback.models.Customer;
 import com.ecommerce.fitgearback.services.CustomerService;
@@ -24,6 +27,7 @@ import java.util.List;
 public class CustomerController {
     private final CustomerService customerService;
     private final UserMapper userMapper;
+
     @PostMapping("/register")
     public ResponseEntity<CustomerResponseDto> registerCustomer(@Valid @RequestBody CustomerDto dto) {
         CustomerResponseDto responseDto = customerService.registerCustomer(dto);
@@ -39,6 +43,15 @@ public class CustomerController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<CustomerResponseDto> updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerDto dto) {
+        CustomerResponseDto updatedCustomer = customerService.updateCustomer(id, dto);
+        if (updatedCustomer == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(updatedCustomer);
+    }
+
     @GetMapping
     public ResponseEntity<List<CustomerResponseDto>> getAll() {
         List<CustomerResponseDto> customers = customerService.getAllCustomers();
@@ -48,5 +61,17 @@ public class CustomerController {
         } else {
             return ResponseEntity.ok(customers);
         }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
+        customerService.deleteCustomer(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
+        LoginResponseDto response = customerService.login(loginRequest);
+        return ResponseEntity.ok(response);
     }
 }
