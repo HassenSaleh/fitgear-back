@@ -3,12 +3,14 @@ spring:
     default-property-inclusion: non_null
   application:
     name: fitgear-back
+  jwt:
+    secret: ${JWT_SECRET}
   main:
     allow-circular-references: true
   datasource:
     url: jdbc:mysql://localhost:3306/fitGearBack?createDatabaseIfNotExist=true
     username: root
-    password:
+    password: salmen25
   jpa:
     show-sql: true
     hibernate:
