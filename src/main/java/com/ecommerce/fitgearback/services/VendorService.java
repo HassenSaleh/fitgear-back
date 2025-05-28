@@ -2,8 +2,6 @@ package com.ecommerce.fitgearback.services;
 
 import com.ecommerce.fitgearback.dtos.VendorDto;
 import com.ecommerce.fitgearback.dtos.VendorResponseDto;
-import com.ecommerce.fitgearback.dtos.login.LoginRequestDto;
-import com.ecommerce.fitgearback.dtos.login.LoginResponseDto;
 import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
 import com.ecommerce.fitgearback.mappers.UserMapper;
 import com.ecommerce.fitgearback.models.Role;
@@ -15,6 +13,9 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -80,22 +81,33 @@ public class VendorService {
         vendorRepository.deleteById(id);
     }
 
-
-    public LoginResponseDto login(LoginRequestDto loginRequest) {
-        Vendor vendor = vendorRepository
-                .findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with email: " + loginRequest.getEmail()));
-
-        if (passwordEncoder.matches(loginRequest.getPassword(), vendor.getPassword())) {
-            return new LoginResponseDto(
-                    vendor.getId(),
-                    vendor.getEmail(),
-                    "VENDOR",
-                    "Login successful"
-            );
-        } else {
-            throw new RuntimeException("Invalid credentials");
-        }
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        var vendor = vendorRepository.findByEmail(email)
+                .orElseThrow(()-> new UsernameNotFoundException("User not found with email: " + email));
+        return new User(
+                vendor.getEmail(),
+                vendor.getPassword(),
+                Collections.emptyList()
+        );
     }
+
+
+
+//    public LoginResponseDto login(LoginRequestDto loginRequest) {
+//        Vendor vendor = vendorRepository
+//                .findByEmail(loginRequest.getEmail())
+//                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with email: " + loginRequest.getEmail()));
+//
+//        if (passwordEncoder.matches(loginRequest.getPassword(), vendor.getPassword())) {
+//            return new LoginResponseDto(
+//                    vendor.getId(),
+//                    vendor.getEmail(),
+//                    "VENDOR",
+//                    "Login successful"
+//            );
+//        } else {
+//            throw new RuntimeException("Invalid credentials");
+//        }
+//    }
 
 }

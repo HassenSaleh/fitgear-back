@@ -2,8 +2,6 @@ package com.ecommerce.fitgearback.controllers;
 
 import com.ecommerce.fitgearback.dtos.VendorDto;
 import com.ecommerce.fitgearback.dtos.VendorResponseDto;
-import com.ecommerce.fitgearback.dtos.login.LoginRequestDto;
-import com.ecommerce.fitgearback.dtos.login.LoginResponseDto;
 import com.ecommerce.fitgearback.services.VendorService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -25,7 +23,7 @@ public class VendorController {
     private final VendorService vendorService;
 
 
-    @PostMapping("/register")
+    @PostMapping
     public ResponseEntity<VendorResponseDto> registerVendor(@Valid @RequestBody VendorDto dto) {
         VendorResponseDto responseDto = vendorService.registerVendor(dto);
         if (responseDto != null) {
@@ -73,9 +71,9 @@ public class VendorController {
     }
 
 
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
-        LoginResponseDto response = vendorService.login(loginRequest);
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/login")
+//    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
+//        LoginResponseDto response = vendorService.login(loginRequest);
+//        return ResponseEntity.ok(response);
+//    }
 }

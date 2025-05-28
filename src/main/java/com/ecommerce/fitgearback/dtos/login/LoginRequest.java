@@ -9,11 +9,11 @@ import lombok.Setter;
 @Setter
 @Getter
 @AllArgsConstructor
-public class LoginRequestDto {
+public class LoginRequest {
+    @NotBlank(message = "Email is required")
     @Email
-    @NotBlank
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "Password is required")
     private String password;
 }

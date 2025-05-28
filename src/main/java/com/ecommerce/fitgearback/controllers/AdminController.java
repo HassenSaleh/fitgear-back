@@ -2,9 +2,6 @@ package com.ecommerce.fitgearback.controllers;
 
 import com.ecommerce.fitgearback.dtos.AdminDto;
 import com.ecommerce.fitgearback.dtos.AdminResponseDto;
-import com.ecommerce.fitgearback.dtos.login.LoginRequestDto;
-import com.ecommerce.fitgearback.dtos.login.LoginResponseDto;
-import com.ecommerce.fitgearback.models.User;
 import com.ecommerce.fitgearback.services.AdminService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -75,9 +72,9 @@ public class AdminController {
     }
 
 
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
-        LoginResponseDto response = adminService.login(loginRequest);
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/login")
+//    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
+//        LoginResponseDto response = adminService.login(loginRequest);
+//        return ResponseEntity.ok(response);
+//    }
 }
