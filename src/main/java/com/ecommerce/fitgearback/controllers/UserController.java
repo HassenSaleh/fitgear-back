@@ -2,7 +2,7 @@ package com.ecommerce.fitgearback.controllers;
 
 import com.ecommerce.fitgearback.dtos.*;
 import com.ecommerce.fitgearback.mappers.UserMapper;
-import com.ecommerce.fitgearback.models.Customer;
+
 import com.ecommerce.fitgearback.models.User;
 import com.ecommerce.fitgearback.services.UserService;
 import jakarta.validation.Valid;
@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -20,7 +21,7 @@ import java.net.URI;
 @Getter
 @AllArgsConstructor
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/v1/users")
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;

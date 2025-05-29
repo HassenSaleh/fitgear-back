@@ -10,16 +10,17 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CustomerDto  {
-    @NotBlank
+    @NotBlank(message = "First name is required")
     private String firstName;
-    @NotBlank
+    @NotBlank(message = "Last name is required")
     private String lastName;
+    @NotBlank(message = "Email is required")
     @Email
     private String email;
-    @NotBlank
+    @NotBlank(message = "Password is required")
     private String password;
-    @NotBlank
+    @NotBlank(message = "Phone number is required")
     private String phoneNumber;
-    @NotBlank
+    @NotBlank(message = "Shipping address is required")
     private String shippingAddress;
 }

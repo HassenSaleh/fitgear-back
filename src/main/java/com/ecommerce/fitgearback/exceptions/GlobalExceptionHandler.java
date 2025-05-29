@@ -1,6 +1,7 @@
 package com.ecommerce.fitgearback.exceptions;
 
 import com.ecommerce.fitgearback.dtos.ErrorDto;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -16,7 +17,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex) {
+    public ResponseEntity<Map<String, Object>> handleResourceNotFound(@NotNull ResourceNotFoundException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.NOT_FOUND.value());
@@ -35,7 +36,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationErrors(
-            MethodArgumentNotValidException exception
+            @NotNull MethodArgumentNotValidException exception
     ) {
         var errors = new HashMap<String, String>();
 

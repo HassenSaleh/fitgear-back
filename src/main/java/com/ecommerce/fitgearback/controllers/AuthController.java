@@ -2,15 +2,14 @@ package com.ecommerce.fitgearback.controllers;
 
 import com.ecommerce.fitgearback.Configurations.JwtConfig;
 import com.ecommerce.fitgearback.dtos.CustomerResponseDto;
-import com.ecommerce.fitgearback.dtos.UserDto;
-import com.ecommerce.fitgearback.dtos.login.JwtRequest;
 import com.ecommerce.fitgearback.dtos.login.JwtResponse;
 import com.ecommerce.fitgearback.dtos.login.LoginRequest;
-import com.ecommerce.fitgearback.dtos.login.LoginResponse;
 import com.ecommerce.fitgearback.mappers.UserMapper;
-import com.ecommerce.fitgearback.models.Admin;
+import com.ecommerce.fitgearback.models.Role;
+import com.ecommerce.fitgearback.repositories.AdminRepository;
 import com.ecommerce.fitgearback.repositories.CustomerRepository;
 import com.ecommerce.fitgearback.repositories.UserRepository;
+import com.ecommerce.fitgearback.repositories.VendorRepository;
 import com.ecommerce.fitgearback.services.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,19 +23,21 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @Setter
 @Getter
 @AllArgsConstructor
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 public class AuthController {
     private final AuthenticationManager authManager;
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
+    private final AdminRepository adminRepository;
+    private final VendorRepository vendorRepository;
     private final UserMapper mapper;
     private final JwtConfig config;
 
@@ -48,8 +49,8 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
                         request.getPassword()
-                )
-        );
+                        )
+                );
                 var user = userRepository.findByEmail(request.getEmail()).orElseThrow();
                 var accessToken = jwtService.generateAccessToken(user);
                 var refreshToken = jwtService.generateRefreshToken(user);
@@ -60,7 +61,15 @@ public class AuthController {
                 cookie.setMaxAge(config.getRefreshTokenExpiration());
                 cookie.setSecure(true);
                 response.addCookie(cookie);
-        return ResponseEntity.ok(new JwtResponse(accessToken));
+                var roles = user.getRoles().stream()
+                    .map(Role::getName)
+                    .toList();
+
+        return ResponseEntity.ok(new JwtResponse(
+                accessToken,
+                refreshToken,
+                roles)
+        );
     }
 
     @PostMapping("/refresh")
@@ -73,22 +82,53 @@ public class AuthController {
         var userId = jwtService.getUserIdFromToken(refreshToken);
         var user = userRepository.findById(userId).orElseThrow();
         var accessToken = jwtService.generateAccessToken(user);
-        return ResponseEntity.ok(new JwtResponse(accessToken));
+        var roles = user.getRoles().stream()
+                .map(Role::getName)
+                .toList();
+        return ResponseEntity.ok(new JwtResponse(
+                accessToken,
+                null,
+                roles)
+        );
     }
-
-    //for customer only
+    //works for all now
     @GetMapping("/test")
-    public ResponseEntity<CustomerResponseDto> test(){
+    public ResponseEntity<?> test(){
         var auth = SecurityContextHolder.getContext().getAuthentication();
         var userId = (Long) auth.getPrincipal();
-        var user = customerRepository.findById(userId).orElse(null);
-        if(user == null){
+//        UserDetails userDetails = (UserDetails) auth.getPrincipal();
+//        String email = userDetails.getUsername();
+//        var user = userRepository.findByEmail(email).orElseThrow();
+//        Long userId = user.getId();
+        var userOpt = customerRepository.findById(userId);
+        if(userOpt.isEmpty()){
             return ResponseEntity.notFound().build();
         }
-        var ma = mapper.toCustomerResponseDTO(user);
-        return ResponseEntity.ok(ma);
 
+        var user = userOpt.get();
+        if (user.getRoles().stream().anyMatch(r -> r.getName().equals("CUSTOMER"))) {
+            var customer = customerRepository.findById(userId).orElse(null);
+            if (customer == null) return ResponseEntity.notFound().build();
+            var dto = mapper.toCustomerResponseDTO(customer);
+            return ResponseEntity.ok(dto);
+        }
+        if (user.getRoles().stream().anyMatch(r -> r.getName().equals("ADMIN"))) {
+            var admin = adminRepository.findById(userId).orElse(null);
+            if (admin == null) return ResponseEntity.notFound().build();
+            var dto = mapper.toAdminResponseDTO(admin);
+            return ResponseEntity.ok(dto);
+        }
+
+        if (user.getRoles().stream().anyMatch(r -> r.getName().equals("VENDOR"))) {
+            var vendor = vendorRepository.findById(userId).orElse(null);
+            if (vendor == null) return ResponseEntity.notFound().build();
+            var dto = mapper.toVendorResponseDTO(vendor);
+            return ResponseEntity.ok(dto);
+        }
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Void> handleBadCredentialsException(){
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

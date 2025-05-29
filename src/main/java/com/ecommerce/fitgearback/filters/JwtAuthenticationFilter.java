@@ -9,8 +9,6 @@ import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -31,7 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         var token = authHeader.replace("Bearer ", "");
-        if(!jwtService.validateToken(token)){
+        if(jwtService.validateToken(token)){
             filterChain.doFilter(request,response);
             return;
         }

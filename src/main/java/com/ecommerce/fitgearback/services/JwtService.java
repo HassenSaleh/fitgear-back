@@ -5,12 +5,14 @@ import com.ecommerce.fitgearback.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 @AllArgsConstructor
 @Service
 public class JwtService {
@@ -22,7 +24,13 @@ public class JwtService {
         return generateToken(user, config.getRefreshTokenExpiration());
     }
 
-    private String generateToken(User user, long tokenExpiration) {
+    private String generateToken(@NotNull User user, long tokenExpiration) {
+        if (user.getRoles().isEmpty()) {
+            return null;
+        }
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", user.getRoleNames());
+        claims.put("userId", user.getId());
         return Jwts.builder()
                 .setSubject(user.getId().toString())
                 .claim("email", user.getEmail())
@@ -37,9 +45,9 @@ public class JwtService {
     public boolean validateToken(String token){
         try {
             var claims = getClaims(token);
-            return claims.getExpiration().after(new Date());
+            return !claims.getExpiration().after(new Date());
         } catch (JwtException ex){
-            return false;
+            return true;
         }
     }
 

@@ -1,6 +1,7 @@
 package com.ecommerce.fitgearback.models;
 
 import com.ecommerce.fitgearback.enums.OrderStatus;
+import com.ecommerce.fitgearback.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,7 +24,7 @@ public class Order {
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus status;
+    private PaymentStatus status;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -37,4 +38,22 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     @ToString.Exclude
     private Payment payment;
+
+    public static Order fromCart(Cart cart, Customer customer) {
+        var order = new Order();
+        order.setCustomer(customer);
+        order.setStatus(PaymentStatus.PENDING);
+        order.setTotalAmount(cart.getTotalPrice());
+
+        cart.getItems().forEach(item -> {
+            var orderItem = new OrderItem(order, item.getProduct(), item.getQuantity());
+            order.items.add(orderItem);
+        });
+
+        return order;
+    }
+
+    public boolean isPlacedBy(Customer customer) {
+        return this.customer.equals(customer);
+    }
 }

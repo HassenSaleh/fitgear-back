@@ -19,7 +19,7 @@ import java.util.NoSuchElementException;
 @Getter
 @AllArgsConstructor
 @RestController
-@RequestMapping("/product")
+@RequestMapping("/api/v1/product")
 public class ProductController {
     private final ProductService productService;
     private final ProductMapper productMapper;
@@ -33,7 +33,7 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
-    @GetMapping("{/categoryId}")
+    @GetMapping("/{categoryId}")
     public ResponseEntity<List<ProductDto>> getAllProducts(
             @PathVariable(name = "categoryId", required = false) Long categoryId
     ) {

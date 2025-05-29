@@ -22,11 +22,11 @@ public class ProductDto {
     private LocalDateTime createdAt;
     private String imageName;
     private String imageType;
-    private byte[] imageData; // optional: can be excluded from list views
+    private byte[] imageData;
     private Boolean active;
     private String categoryName;
     private Long quantity;
 
-    private Long vendorId;     // Extracted from Vendor entity
+    private Long vendorId;
     private Long categoryId;
 }

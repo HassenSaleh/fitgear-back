@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -18,7 +19,8 @@ import java.net.URI;
 @Getter
 @AllArgsConstructor
 @RestController
-@RequestMapping("/vendors")
+@RequestMapping("/api/v1/vendors")
+@PreAuthorize(value = "hasRole('VENDOR')")
 public class VendorController {
     private final VendorService vendorService;
 

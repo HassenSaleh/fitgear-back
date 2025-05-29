@@ -12,9 +12,11 @@ import org.springframework.context.annotation.ComponentScan;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+
 @ComponentScan
 @Mapper(componentModel = "spring")
 public interface UserMapper {
+
     Admin toAdmin(AdminDto dto);
     AdminResponseDto toAdminResponseDTO(Admin admin);
     Vendor toVendor(VendorDto dto);
@@ -27,5 +29,4 @@ public interface UserMapper {
                 .map(Role::getName)
                 .collect(Collectors.toSet());
     }
-
 }

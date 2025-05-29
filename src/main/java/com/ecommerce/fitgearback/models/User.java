@@ -3,6 +3,7 @@ package com.ecommerce.fitgearback.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.Set;
 
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -36,6 +37,11 @@ public abstract class User {
     )
     private Set<Role> roles;
 
+    public List<String> getRoleNames() {
+        return roles.stream()
+                .map(Role::getName)
+                .toList();
+    }
 
     @Override
     public boolean equals(Object o) {
