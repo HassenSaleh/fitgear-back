@@ -10,10 +10,8 @@ import java.util.List;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-
     @EntityGraph(attributePaths = "category")
     List<Product> findByCategoryId(Long categoryId);
-
     @EntityGraph(attributePaths = "category")
     @Query("SELECT p FROM Product p")
     List<Product> findAllWithCategory();

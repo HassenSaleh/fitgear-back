@@ -59,7 +59,7 @@ public class SecurityConfig {
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(c->
                         c.authenticationEntryPoint(
-                                new HttpStatusEntryPoint(HttpStatus.BAD_REQUEST)));
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
         return http.build();
     }
 

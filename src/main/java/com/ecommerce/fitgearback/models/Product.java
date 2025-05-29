@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Table(name = "products")
@@ -20,7 +21,16 @@ public class Product {
     private String description;
     private BigDecimal price;
     private Integer stock;
+    private Date date;
     private LocalDateTime createdAt = LocalDateTime.now();
+    private String imageName;
+    private String imageType;
+    @Lob
+    private byte[] imageData;
+    private Boolean active = true;
+    private String categoryName;
+    private Long quantity;
+
 
     @ManyToOne
     @JoinColumn(name = "vendor_id")

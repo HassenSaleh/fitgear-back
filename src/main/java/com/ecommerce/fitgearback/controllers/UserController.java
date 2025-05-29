@@ -25,8 +25,10 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+
+
     @GetMapping
-    public Iterable<com.ecommerce.fitgearback.models.User> getAllUsers(){
+    public Iterable<User> getAllUsers(){
         return userService.findAll();
     }
 
