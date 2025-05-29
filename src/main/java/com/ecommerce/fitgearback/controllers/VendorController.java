@@ -18,7 +18,7 @@ import java.net.URI;
 @Getter
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1/vendors")
+@RequestMapping("/api/v1/vendor")
 @PreAuthorize(value = "hasRole('VENDOR')")
 
 public class VendorController {

@@ -20,7 +20,7 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1/customers")
+@RequestMapping("/api/v1/customer")
 @PreAuthorize(value = "hasRole('CUSTOMER')")
 
 public class CustomerController {

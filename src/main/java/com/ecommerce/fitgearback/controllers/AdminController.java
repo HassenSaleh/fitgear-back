@@ -18,7 +18,7 @@ import java.net.URI;
 @Getter
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1/admins")
+@RequestMapping("/api/v1/admin")
 @PreAuthorize(value = "hasRole('ADMIN')")
 public class AdminController {
 
