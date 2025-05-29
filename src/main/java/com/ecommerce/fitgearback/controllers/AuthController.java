@@ -96,10 +96,6 @@ public class AuthController {
     public ResponseEntity<?> test(){
         var auth = SecurityContextHolder.getContext().getAuthentication();
         var userId = (Long) auth.getPrincipal();
-//        UserDetails userDetails = (UserDetails) auth.getPrincipal();
-//        String email = userDetails.getUsername();
-//        var user = userRepository.findByEmail(email).orElseThrow();
-//        Long userId = user.getId();
         var userOpt = customerRepository.findById(userId);
         if(userOpt.isEmpty()){
             return ResponseEntity.notFound().build();
