@@ -1,6 +1,8 @@
 package com.ecommerce.fitgearback.services;
 
 import com.ecommerce.fitgearback.dtos.*;
+import com.ecommerce.fitgearback.dtos.admin.AdminRequest;
+import com.ecommerce.fitgearback.dtos.vendor.VendorRequest;
 import com.ecommerce.fitgearback.mappers.UserMapper;
 import com.ecommerce.fitgearback.models.*;
 import com.ecommerce.fitgearback.repositories.RoleRepository;
@@ -47,15 +49,15 @@ public class UserService  implements UserDetailsService {
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }
 
-    public User registerVendor(@NotNull VendorDto dto) {
+    public User registerVendor(@NotNull VendorRequest request) {
         Vendor vendor = new Vendor();
-        vendor.setEmail(dto.getEmail());
-        vendor.setPassword(passwordEncoder.encode(dto.getPassword()));
-        vendor.setFirstName(dto.getFirstName());
-        vendor.setLastName(dto.getLastName());
-        vendor.setCompanyName(dto.getCompanyName());
-        vendor.setCompanyAddress(dto.getCompanyAddress());
-        vendor.setContactNumber(dto.getContactNumber());
+        vendor.setEmail(request.getEmail());
+        vendor.setPassword(passwordEncoder.encode(request.getPassword()));
+        vendor.setFirstName(request.getFirstName());
+        vendor.setLastName(request.getLastName());
+        vendor.setCompanyName(request.getCompanyName());
+        vendor.setCompanyAddress(request.getCompanyAddress());
+        vendor.setContactNumber(request.getContactNumber());
 
         Role role = roleRepository.findByName("VENDOR")
                 .orElseThrow(() -> new RuntimeException("Role not found"));
@@ -64,7 +66,7 @@ public class UserService  implements UserDetailsService {
         return userRepository.save(vendor);
     }
 
-    public User registerAdmin(@NotNull AdminDto dto) {
+    public User registerAdmin(@NotNull AdminRequest dto) {
         Admin admin = new Admin();
         admin.setEmail(dto.getEmail());
         admin.setPassword(passwordEncoder.encode(dto.getPassword()));
@@ -79,7 +81,7 @@ public class UserService  implements UserDetailsService {
         return userRepository.save(admin);
     }
 
-    public User registerGeneralUser(RegisterUserRequest req) {
+    public User registerGeneralUser(@NotNull UserDto req) {
         Role role = roleRepository.findByName(req.getRole().toUpperCase())
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 
@@ -119,23 +121,11 @@ public class UserService  implements UserDetailsService {
         return userRepository.save(user);
     }
 
-
-    private void setCommonFields(User user, UserDto dto) {
-        user.setEmail(dto.getEmail());
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
-    }
-
     private Role getRole(String roleName) {
         return roleRepository.findByName(roleName)
                 .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
     }
-
     public void delete(User user) {
         userRepository.delete(user);
-    }
-    public Iterable<User> findAll() {
-        return userRepository.findAll();
     }
 }

@@ -1,10 +1,11 @@
 package com.ecommerce.fitgearback.controllers;
 
 import com.ecommerce.fitgearback.Configurations.JwtConfig;
-import com.ecommerce.fitgearback.dtos.CustomerResponseDto;
 import com.ecommerce.fitgearback.dtos.login.JwtResponse;
 import com.ecommerce.fitgearback.dtos.login.LoginRequest;
-import com.ecommerce.fitgearback.mappers.UserMapper;
+import com.ecommerce.fitgearback.mappers.AdminMapper;
+import com.ecommerce.fitgearback.mappers.CustomerMapper;
+import com.ecommerce.fitgearback.mappers.VendorMapper;
 import com.ecommerce.fitgearback.models.Role;
 import com.ecommerce.fitgearback.repositories.AdminRepository;
 import com.ecommerce.fitgearback.repositories.CustomerRepository;
@@ -23,7 +24,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @Setter
@@ -38,7 +38,9 @@ public class AuthController {
     private final CustomerRepository customerRepository;
     private final AdminRepository adminRepository;
     private final VendorRepository vendorRepository;
-    private final UserMapper mapper;
+    private final CustomerMapper customerMapper;
+    private final VendorMapper vendorMapper;
+    private final AdminMapper adminMapper;
     private final JwtConfig config;
 
     @PostMapping("/login")
@@ -105,20 +107,20 @@ public class AuthController {
         if (user.getRoles().stream().anyMatch(r -> r.getName().equals("CUSTOMER"))) {
             var customer = customerRepository.findById(userId).orElse(null);
             if (customer == null) return ResponseEntity.notFound().build();
-            var dto = mapper.toCustomerResponseDTO(customer);
+            var dto = customerMapper.toResponse(customer);
             return ResponseEntity.ok(dto);
         }
         if (user.getRoles().stream().anyMatch(r -> r.getName().equals("ADMIN"))) {
             var admin = adminRepository.findById(userId).orElse(null);
             if (admin == null) return ResponseEntity.notFound().build();
-            var dto = mapper.toAdminResponseDTO(admin);
+            var dto = adminMapper.toResponse(admin);
             return ResponseEntity.ok(dto);
         }
 
         if (user.getRoles().stream().anyMatch(r -> r.getName().equals("VENDOR"))) {
             var vendor = vendorRepository.findById(userId).orElse(null);
             if (vendor == null) return ResponseEntity.notFound().build();
-            var dto = mapper.toVendorResponseDTO(vendor);
+            var dto = vendorMapper.toResponse(vendor);
             return ResponseEntity.ok(dto);
         }
 

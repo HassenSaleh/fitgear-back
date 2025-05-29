@@ -1,4 +1,4 @@
-package com.ecommerce.fitgearback.dtos;
+package com.ecommerce.fitgearback.dtos.others;
 
 import lombok.Data;
 
@@ -7,3 +7,5 @@ public class ChangePasswordRequest {
     private String oldPassword;
     private String newPassword;
 }
+
+

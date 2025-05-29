@@ -1,6 +1,6 @@
 package com.ecommerce.fitgearback.annotations;
 
-import com.ecommerce.fitgearback.dtos.LowercaseValidator;
+import com.ecommerce.fitgearback.dtos.others.LowercaseValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 

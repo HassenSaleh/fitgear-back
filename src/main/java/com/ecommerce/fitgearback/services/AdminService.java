@@ -1,9 +1,9 @@
 package com.ecommerce.fitgearback.services;
 
-import com.ecommerce.fitgearback.dtos.AdminDto;
-import com.ecommerce.fitgearback.dtos.AdminResponseDto;
+import com.ecommerce.fitgearback.dtos.admin.AdminRequest;
+import com.ecommerce.fitgearback.dtos.admin.AdminResponse;
 import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
-import com.ecommerce.fitgearback.mappers.UserMapper;
+import com.ecommerce.fitgearback.mappers.AdminMapper;
 import com.ecommerce.fitgearback.models.Admin;
 
 import com.ecommerce.fitgearback.models.Role;
@@ -12,6 +12,7 @@ import com.ecommerce.fitgearback.repositories.RoleRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,11 +29,11 @@ import java.util.Set;
 @Service
 public class AdminService {
     private final AdminRepository adminRepository;
-    private final UserMapper adminMapper;
+    private final AdminMapper adminMapper;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
 
-    public AdminResponseDto registerAdmin(AdminDto dto){
+    public AdminResponse registerAdmin(AdminRequest dto){
         Admin admin = adminMapper.toAdmin(dto);
         admin.setPassword(passwordEncoder.encode(dto.getPassword()));
         Role role = roleRepository
@@ -40,10 +41,10 @@ public class AdminService {
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         admin.setRoles(Set.of(role));
         Admin saved = adminRepository.save(admin);
-        return adminMapper.toAdminResponseDTO(saved);
+        return adminMapper.toResponse(saved);
     }
 
-    public AdminResponseDto updateAdmin(Long id, AdminDto dto) {
+    public AdminResponse updateAdmin(Long id, @NotNull AdminRequest dto) {
         Admin existing = adminRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + id));
         existing.setFirstName(dto.getFirstName());
@@ -53,23 +54,23 @@ public class AdminService {
             existing.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
         Admin updated = adminRepository.save(existing);
-        return adminMapper.toAdminResponseDTO(updated);
+        return adminMapper.toResponse(updated);
     }
 
     public void deleteAdmin(Long id) {
         adminRepository.deleteById(id);
     }
 
-    public AdminResponseDto getAdminById(Long id) {
+    public AdminResponse getAdminById(Long id) {
         Admin admin = adminRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + id));
-        return adminMapper.toAdminResponseDTO(admin);
+        return adminMapper.toResponse(admin);
     }
 
-    public List<AdminResponseDto> getAllAdmins() {
+    public List<AdminResponse> getAllAdmins() {
         return adminRepository.findAll().stream()
-                .map(adminMapper::toAdminResponseDTO)
+                .map(adminMapper::toResponse)
                 .toList();
     }
 
@@ -82,23 +83,4 @@ public class AdminService {
                 Collections.emptyList()
         );
     }
-
-//
-//    public LoginResponseDto login(LoginRequestDto loginRequest) {
-//        Admin admin = adminRepository
-//                .findByEmail(loginRequest.getEmail())
-//                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with email: " + loginRequest.getEmail()));
-//
-//        if (passwordEncoder.matches(loginRequest.getPassword(), admin.getPassword())) {
-//            return new LoginResponseDto(
-//                    admin.getId(),
-//                    admin.getEmail(),
-//                    "ADMIN",
-//                    "Login successful"
-//            );
-//        } else {
-//            throw new RuntimeException("Invalid credentials");
-//        }
-//    }
-
 }

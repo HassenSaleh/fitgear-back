@@ -1,12 +1,14 @@
 package com.ecommerce.fitgearback.controllers;
 
-import com.ecommerce.fitgearback.dtos.ProductDto;
-import com.ecommerce.fitgearback.mappers.ProductMapper;
+import com.ecommerce.fitgearback.dtos.product.ProductRequest;
+import com.ecommerce.fitgearback.dtos.product.ProductResponse;
+import com.ecommerce.fitgearback.models.Product;
 import com.ecommerce.fitgearback.services.ProductService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,33 +22,31 @@ import java.util.NoSuchElementException;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/product")
+
 public class ProductController {
     private final ProductService productService;
-    private final ProductMapper productMapper;
 
     @GetMapping
-    public ResponseEntity<ProductDto> getProductById(Long id){
-        ProductDto product = productService.getProductById(id);
-        if(product == null){
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<List<ProductResponse>> getAllProducts(@RequestParam(required = false) Long id){
+        List<ProductResponse> products = productService.getAllProducts(id);
+        if(products == null || products.isEmpty()){
+            return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(product);
+        return ResponseEntity.ok(products);
     }
 
     @GetMapping("/{categoryId}")
-    public ResponseEntity<List<ProductDto>> getAllProducts(
-            @PathVariable(name = "categoryId", required = false) Long categoryId
-    ) {
-        List<ProductDto> products = productService.getAllProducts(categoryId);
-
+    public ResponseEntity<List<ProductResponse>> getProductsByCategory(@PathVariable Long categoryId) {
+        List<ProductResponse> products = productService.getAllProducts(categoryId);
         if (products.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(products);
     }
 
+
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDto> getProduct(@PathVariable Long id) {
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
         var product = productService.getProductById(id);
         if (product == null) {
             return ResponseEntity.notFound().build();
@@ -54,15 +54,32 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
+    @GetMapping("/{id}/image")
+    public ResponseEntity<byte[]> getProductImage(@PathVariable Long id) {
+        Product product = productService.getProductEntityById(id); // Return Product not DTO
+        byte[] image = product.getImageData();
+
+        if (image == null || image.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, product.getImageType() != null ? product.getImageType() : "image/jpeg")
+                .body(image);
+    }
+
+
+
 
     @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<ProductDto> createProduct(
-            @Valid @RequestPart("product") ProductDto productDto,
+    public ResponseEntity<ProductResponse> createProduct(
+            @Valid @RequestPart("product") ProductRequest productRequest,
             @Valid @RequestPart(value = "image", required = false) MultipartFile image,
             UriComponentsBuilder uriBuilder) {
         try {
-            ProductDto createdProduct = productService.createProduct(productDto, image);
-            var uri = uriBuilder.path("/products/{id}")
+            ProductResponse createdProduct = productService.createProduct(productRequest, image);
+            var uri = uriBuilder
+                    .path("/products/{id}")
                     .buildAndExpand(createdProduct.getId())
                     .toUri();
             return ResponseEntity.created(uri).body(createdProduct);
@@ -72,12 +89,12 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDto> updateProduct(
+    public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id,
-            @RequestBody ProductDto productDto) {
+            @RequestBody ProductRequest productRequest) {
 
         try {
-            ProductDto updatedProduct = productService.updateProduct(id, productDto);
+            ProductResponse updatedProduct = productService.updateProduct(id, productRequest);
             return ResponseEntity.ok(updatedProduct);
         } catch (IllegalStateException e) {
             return ResponseEntity.notFound().build();
@@ -94,4 +111,14 @@ public class ProductController {
             return ResponseEntity.notFound().build();
         }
     }
+
+
+    @GetMapping("/sorted")
+    public ResponseEntity<List<ProductResponse>> getSortedProducts(
+            @RequestParam(defaultValue = "") String sortBy
+    ) {
+        List<ProductResponse> sorted = productService.getAllSorted(sortBy);
+        return sorted.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(sorted);
+    }
+
 }

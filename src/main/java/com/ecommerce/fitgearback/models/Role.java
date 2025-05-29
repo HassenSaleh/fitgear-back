@@ -1,7 +1,10 @@
 package com.ecommerce.fitgearback.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.Set;
 
 @Entity
 @Table(name = "roles")
@@ -10,17 +13,12 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Role {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Column(nullable = false, unique = true)
     private String name;  // e.g. "ADMIN", "CUSTOMER", "VENDOR"
-
-    // If you want bidirectional mapping, uncomment below
-    /*
     @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
     private Set<User> users;
-    */
 }

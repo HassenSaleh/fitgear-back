@@ -1,6 +1,6 @@
 package com.ecommerce.fitgearback.exceptions;
 
-import com.ecommerce.fitgearback.dtos.ErrorDto;
+import com.ecommerce.fitgearback.dtos.others.ErrorDto;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

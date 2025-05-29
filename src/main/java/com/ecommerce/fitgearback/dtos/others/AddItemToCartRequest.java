@@ -1,4 +1,4 @@
-package com.ecommerce.fitgearback.dtos;
+package com.ecommerce.fitgearback.dtos.others;
 
 import lombok.Data;
 

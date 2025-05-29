@@ -1,9 +1,8 @@
 package com.ecommerce.fitgearback.services;
 
-import com.ecommerce.fitgearback.dtos.VendorDto;
-import com.ecommerce.fitgearback.dtos.VendorResponseDto;
+import com.ecommerce.fitgearback.dtos.vendor.*;
 import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
-import com.ecommerce.fitgearback.mappers.UserMapper;
+import com.ecommerce.fitgearback.mappers.VendorMapper;
 import com.ecommerce.fitgearback.models.Role;
 import com.ecommerce.fitgearback.models.Vendor;
 import com.ecommerce.fitgearback.repositories.RoleRepository;
@@ -13,6 +12,7 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -32,46 +32,46 @@ public class VendorService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserMapper vendorMapper;
+    private final VendorMapper vendorMapper;
 
     @Transactional
-    public VendorResponseDto registerVendor(VendorDto vendorDto) {
-        Vendor vendor = vendorMapper.toVendor(vendorDto);
-        vendor.setPassword(passwordEncoder.encode(vendorDto.getPassword()));
+    public VendorResponse registerVendor(VendorRequest vendorRequest) {
+        Vendor vendor = vendorMapper.toVendor(vendorRequest);
+        vendor.setPassword(passwordEncoder.encode(vendorRequest.getPassword()));
         Role vendorRole = roleRepository
                 .findByName("VENDOR")
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         vendor.setRoles(Collections.singleton(vendorRole));
         Vendor savedVendor = userRepository.save(vendor);
-        return vendorMapper.toVendorResponseDTO(savedVendor);
+        return vendorMapper.toResponse(savedVendor);
     }
 
-    public List<VendorResponseDto> getAllVendors() {
+    public List<VendorResponse> getAllVendors() {
         return vendorRepository.findAll()
                 .stream()
-                .map(vendorMapper::toVendorResponseDTO)
+                .map(vendorMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
-    public VendorResponseDto getVendorById(Long id) {
+    public VendorResponse getVendorById(Long id) {
         Vendor vendor = vendorRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with id: " + id));
-        return vendorMapper.toVendorResponseDTO(vendor);
+        return vendorMapper.toResponse(vendor);
     }
 
 
-    public VendorResponseDto updateVendor(Long id, VendorDto dto) {
+    public VendorResponse updateVendor(Long id, @NotNull VendorRequest request) {
         Vendor vendor = vendorRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with id: " + id));
 
-        vendor.setFirstName(dto.getFirstName());
-        vendor.setLastName(dto.getLastName());
-        vendor.setEmail(dto.getEmail());
+        vendor.setFirstName(request.getFirstName());
+        vendor.setLastName(request.getLastName());
+        vendor.setEmail(request.getEmail());
 
         Vendor updatedVendor = vendorRepository.save(vendor);
-        return vendorMapper.toVendorResponseDTO(updatedVendor);
+        return vendorMapper.toResponse(updatedVendor);
     }
 
     public void deleteVendor(Long id) {
@@ -90,24 +90,4 @@ public class VendorService {
                 Collections.emptyList()
         );
     }
-
-
-
-//    public LoginResponseDto login(LoginRequestDto loginRequest) {
-//        Vendor vendor = vendorRepository
-//                .findByEmail(loginRequest.getEmail())
-//                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with email: " + loginRequest.getEmail()));
-//
-//        if (passwordEncoder.matches(loginRequest.getPassword(), vendor.getPassword())) {
-//            return new LoginResponseDto(
-//                    vendor.getId(),
-//                    vendor.getEmail(),
-//                    "VENDOR",
-//                    "Login successful"
-//            );
-//        } else {
-//            throw new RuntimeException("Invalid credentials");
-//        }
-//    }
-
 }

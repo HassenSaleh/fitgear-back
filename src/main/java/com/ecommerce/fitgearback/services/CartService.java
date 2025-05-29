@@ -1,7 +1,7 @@
 package com.ecommerce.fitgearback.services;
 
-import com.ecommerce.fitgearback.dtos.CartDto;
-import com.ecommerce.fitgearback.dtos.CartItemDto;
+import com.ecommerce.fitgearback.dtos.cart.CartItemResponse;
+import com.ecommerce.fitgearback.dtos.cart.CartResponse;
 import com.ecommerce.fitgearback.exceptions.CartNotFoundException;
 import com.ecommerce.fitgearback.exceptions.ProductNotFoundException;
 import com.ecommerce.fitgearback.mappers.CartMapper;
@@ -20,16 +20,15 @@ public class CartService {
     private CartMapper cartMapper;
     private ProductRepository productRepository;
 
-    public CartDto createCart() {
+    public CartResponse createCart() {
         var cart = new Cart();
         cartRepository.save(cart);
 
-        return cartMapper.toDto(cart);
+        return cartMapper.toCartResponse(cart);
     }
 
-    public CartItemDto addToCart(UUID cartId, Long productId) {
-        var cart = cartRepository.getCartWithItems(cartId)
-                        .orElse(null);
+    public CartItemResponse addToCart(UUID cartId, Long productId) {
+        var cart = cartRepository.getCartWithItems(cartId).orElse(null);
         if (cart == null) {
             throw new CartNotFoundException();
         }
@@ -44,18 +43,18 @@ public class CartService {
 
         cartRepository.save(cart);
 
-        return cartMapper.toEntity(cartItem);
+        return cartMapper.toCartItemResponse(cartItem);
     }
 
-    public CartDto getCart(UUID cartId) {
+    public CartResponse getCart(UUID cartId) {
         var cart = cartRepository.getCartWithItems(cartId).orElse(null);
         if (cart == null) {
             throw new CartNotFoundException();
         }
-        return cartMapper.toDto(cart);
+        return cartMapper.toCartResponse(cart);
     }
 
-    public CartItemDto updateItem(UUID cartId, Long productId, Integer quantity) {
+    public CartItemResponse updateItem(UUID cartId, Long productId, Integer quantity) {
         var cart = cartRepository.getCartWithItems(cartId)
                 .orElse(null);
         if (cart == null) {
@@ -70,7 +69,7 @@ public class CartService {
         cartItem.setQuantity(quantity);
         cartRepository.save(cart);
 
-        return cartMapper.toEntity(cartItem);
+        return cartMapper.toCartItemResponse(cartItem);
     }
 
     public void removeItem(UUID cartId, Long productId) {
@@ -90,7 +89,6 @@ public class CartService {
         if (cart == null) {
             throw new CartNotFoundException();
         }
-
         cart.clear();
 
         cartRepository.save(cart);

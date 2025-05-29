@@ -13,10 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Vendor extends User  {
-
     private String companyName;
-
     private String companyAddress;
-
     private String contactNumber;
 }

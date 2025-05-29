@@ -21,22 +21,28 @@ public class Product {
     private String description;
     private BigDecimal price;
     private Integer stock;
-    private Date date;
-    private LocalDateTime createdAt = LocalDateTime.now();
+
+    private LocalDateTime createdAt;
+
     private String imageName;
     private String imageType;
+
     @Lob
     private byte[] imageData;
-    private Boolean active = true;
-    private String categoryName;
-    private Long quantity;
 
+    private Boolean active = true;
+    private Long quantity;
 
     @ManyToOne
     @JoinColumn(name = "vendor_id")
     private Vendor vendor;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

@@ -1,5 +1,6 @@
 package com.ecommerce.fitgearback.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,15 +19,12 @@ public abstract class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Column(nullable = false, unique = true)
     private String email;
-
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
-
     private String firstName;
-
     private String lastName;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -36,13 +34,11 @@ public abstract class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
-
     public List<String> getRoleNames() {
         return roles.stream()
                 .map(Role::getName)
                 .toList();
     }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

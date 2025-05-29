@@ -1,6 +1,7 @@
 package com.ecommerce.fitgearback.services;
 
-import com.ecommerce.fitgearback.dtos.ProductDto;
+import com.ecommerce.fitgearback.dtos.product.ProductResponse;
+import com.ecommerce.fitgearback.dtos.product.ProductRequest;
 import com.ecommerce.fitgearback.mappers.ProductMapper;
 import com.ecommerce.fitgearback.models.Product;
 import com.ecommerce.fitgearback.repositories.CategoryRepository;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -22,17 +24,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
 
-//    public Product saveProduct(ProductDto dto){
-//        return productRepository.save(dto.toProduct());
-//    }
-    public Iterable<Product> getProduct(){
-        return productRepository.findAll();
-    }
-
-    public List<Product> findByCategoryId(Long id){
-        return productRepository.findByCategoryId(id);
-    }
-    public List<ProductDto> getAllProducts(Long categoryId) {
+    public List<ProductResponse> getAllProducts(Long categoryId) {
         List<Product> products;
         if (categoryId != null) {
             products = productRepository.findByCategoryId(categoryId);
@@ -41,22 +33,22 @@ public class ProductService {
         }
 
         return products.stream()
-                .map(productMapper::toDto).toList();
+                .map(productMapper::toProductResponse).toList();
     }
 
-    public ProductDto getProductById(Long id){
+    public ProductResponse getProductById(Long id){
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
-        return productMapper.toDto(product);
+        return productMapper.toProductResponse(product);
     }
 
     @Transactional
-    public ProductDto createProduct(@NotNull ProductDto productDto,MultipartFile image) {
+    public ProductResponse createProduct(@NotNull ProductRequest productRequest, MultipartFile image) {
         var category = categoryRepository
-                .findById(productDto.getCategoryId())
+                .findById(productRequest.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid category ID"));
 
-        var product = productMapper.toEntity(productDto);
+        var product = productMapper.toProduct(productRequest);
         product.setCategory(category);
 
         if (image != null && !image.isEmpty()) {
@@ -69,25 +61,26 @@ public class ProductService {
         }
 
         productRepository.save(product);
-        productDto.setId(product.getId());
-        return productDto;
+        var productResponse = productMapper.toProductResponse(product);
+        productResponse.setId(product.getId());
+        return productResponse;
     }
 
     @Transactional
-    public ProductDto updateProduct(@NotNull Long id,@NotNull ProductDto productDto) {
+    public ProductResponse updateProduct(@NotNull Long id,@NotNull ProductRequest productRequest) {
         var category = categoryRepository
-                .findById(productDto.getCategoryId())
+                .findById(productRequest.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid category ID"));
 
         var product = productRepository.findById(id)
                     .orElseThrow(() -> new IllegalStateException("Product not found"));
 
-        productMapper.update(productDto, product);
+        productMapper.update(productRequest, product);
         product.setCategory(category);
         productRepository.save(product);
-
-        productDto.setId(product.getId());
-        return productDto;
+        var productResponse = productMapper.toProductResponse(product);
+        productResponse.setId(product.getId());
+        return productResponse;
     }
 
     @Transactional
@@ -97,4 +90,29 @@ public class ProductService {
         }
         productRepository.deleteById(id);
     }
+
+    public List<ProductResponse> getAllSorted(@NotNull String sortBy) {
+        List<Product> products = new ArrayList<>();
+
+        switch (sortBy) {
+            case "price_asc" -> products = productRepository.findAllByOrderByPriceAsc();
+            case "price_desc" -> products = productRepository.findAllByOrderByPriceDesc();
+            case "stock_asc" -> products = productRepository.findAllByOrderByStockAsc();
+            case "stock_desc" -> products = productRepository.findAllByOrderByStockDesc();
+            case "name_asc" -> products = productRepository.findAllByOrderByNameAsc();
+            case "name_desc" -> products = productRepository.findAllByOrderByNameDesc();
+            default -> products = productRepository.findAll();
+        }
+
+        return products.stream()
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+
+    public Product getProductEntityById(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Product not found with ID: " + id));
+    }
+
+
 }

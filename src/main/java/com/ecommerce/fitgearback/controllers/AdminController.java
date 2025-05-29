@@ -1,7 +1,7 @@
 package com.ecommerce.fitgearback.controllers;
 
-import com.ecommerce.fitgearback.dtos.AdminDto;
-import com.ecommerce.fitgearback.dtos.AdminResponseDto;
+import com.ecommerce.fitgearback.dtos.admin.AdminRequest;
+import com.ecommerce.fitgearback.dtos.admin.AdminResponse;
 import com.ecommerce.fitgearback.services.AdminService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -25,8 +25,8 @@ public class AdminController {
     private final AdminService adminService;
 
     @PostMapping("/register")
-    public ResponseEntity<AdminResponseDto> registerAdmin(@Valid @RequestBody AdminDto dto) {
-        AdminResponseDto admin = adminService.registerAdmin(dto);
+    public ResponseEntity<AdminResponse> registerAdmin(@Valid @RequestBody AdminRequest dto) {
+        AdminResponse admin = adminService.registerAdmin(dto);
         if(admin != null ){
             URI location = ServletUriComponentsBuilder
                     .fromCurrentRequest()
@@ -41,8 +41,8 @@ public class AdminController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AdminResponseDto> updateAdmin(@PathVariable Long id, @Valid @RequestBody AdminDto dto) {
-        AdminResponseDto admin = adminService.updateAdmin(id, dto);
+    public ResponseEntity<AdminResponse> updateAdmin(@PathVariable Long id, @Valid @RequestBody AdminRequest dto) {
+        AdminResponse admin = adminService.updateAdmin(id, dto);
         if(admin == null ){
             return ResponseEntity.notFound().build();
         }
@@ -56,8 +56,8 @@ public class AdminController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AdminResponseDto> getAdminById(@PathVariable Long id) {
-        AdminResponseDto admin = adminService.getAdminById(id);
+    public ResponseEntity<AdminResponse> getAdminById(@PathVariable Long id) {
+        AdminResponse admin = adminService.getAdminById(id);
         if(admin != null ){
             return ResponseEntity.ok(admin);
         }
@@ -65,18 +65,12 @@ public class AdminController {
     }
 
     @GetMapping
-    public ResponseEntity<Iterable<AdminResponseDto>> getAllAdmins() {
-        Iterable<AdminResponseDto> admins = adminService.getAllAdmins();
+    public ResponseEntity<Iterable<AdminResponse>> getAllAdmins() {
+        Iterable<AdminResponse> admins = adminService.getAllAdmins();
         if(admins.iterator().hasNext()){
             return ResponseEntity.ok(admins);
         }
         return ResponseEntity.noContent().build();
     }
 
-
-//    @PostMapping("/login")
-//    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
-//        LoginResponseDto response = adminService.login(loginRequest);
-//        return ResponseEntity.ok(response);
-//    }
 }
