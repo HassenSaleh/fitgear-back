@@ -43,9 +43,9 @@ public class SecurityConfig {
                         c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                         .authorizeHttpRequests(c -> c
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/admin/**").permitAll()
                         .requestMatchers("/api/v1/customer/**").permitAll()
-                        .requestMatchers("/api/v1/vendor/**").hasRole("VENDOR")
+                        .requestMatchers("/api/v1/vendor/**").permitAll()
                         .requestMatchers("/api/v1/product/**").permitAll()
                         .requestMatchers("/api/v1/category/**").permitAll()
                         .requestMatchers( "/api/v1/user/**").permitAll()

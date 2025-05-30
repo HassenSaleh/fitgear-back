@@ -27,7 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
         // Skip authentication for these public paths
-        return path.startsWith("/api/v1/customer/") || path.startsWith("/api/v1/auth/");
+        return path.startsWith("/api/v1/customer/") || path.startsWith("/api/v1/auth/") || path.startsWith("/api/v1/vendor/") || path.startsWith("/api/v1/admin/");
     }
     @Override
     protected void doFilterInternal(

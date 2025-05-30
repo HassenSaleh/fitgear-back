@@ -6,6 +6,7 @@ import com.ecommerce.fitgearback.dtos.vendor.*;
 import com.ecommerce.fitgearback.models.Product;
 import com.ecommerce.fitgearback.services.ProductService;
 import com.ecommerce.fitgearback.services.VendorService;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,8 +33,8 @@ import java.util.UUID;
 public class VendorController {
     private final VendorService vendorService;
     private final ProductService productService;
-
-    @GetMapping("/")
+    @PermitAll
+    @GetMapping("/all")
     public ResponseEntity<Iterable<VendorResponse>> getAllVendors() {
         Iterable<VendorResponse> vendors = vendorService.getAllVendors();
         if(vendors.iterator().hasNext()){
@@ -42,12 +43,14 @@ public class VendorController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize(value = "hasRole('VENDOR')")
     @GetMapping("/{vendorId}/dashboard")
     public ResponseEntity<VendorDashboardResponse> getDashboard(@PathVariable Long vendorId) {
         VendorDashboardResponse response = vendorService.getDashboard(vendorId);
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize(value = "hasRole('VENDOR')")
     @GetMapping("/{id}")
     public ResponseEntity<VendorResponse> getVendorById(@PathVariable Long id) {
         VendorResponse vendor = vendorService.getVendorById(id);
@@ -57,6 +60,7 @@ public class VendorController {
         return ResponseEntity.notFound().build();
     }
 
+    @PermitAll
     @PostMapping("/sign")
     public ResponseEntity<VendorResponse> sign(@Valid @RequestBody VendorRequest request) {
         VendorResponse response = vendorService.sign(request);
@@ -72,6 +76,7 @@ public class VendorController {
         }
     }
 
+    @PreAuthorize(value = "hasRole('VENDOR')")
     @PutMapping("/{id}")
     public ResponseEntity<VendorResponse> updateVendor(@PathVariable Long id, @Valid @RequestBody VendorRequest request) {
         VendorResponse updatedVendor = vendorService.updateVendor(id, request);
@@ -87,6 +92,7 @@ public class VendorController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize(value = "hasRole('VENDOR')")
     @PostMapping(value = "/product", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductResponse> addProduct(
             @Valid @RequestPart("product") ProductRequest request,
@@ -96,6 +102,7 @@ public class VendorController {
     }
 
 
+    @PreAuthorize(value = "hasRole('VENDOR')")
     @DeleteMapping("/product/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id, @RequestParam Long vendorId) {
         productService.deleteProduct(id, vendorId);

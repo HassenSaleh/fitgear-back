@@ -38,7 +38,7 @@ public class CustomerController {
         List<CustomerResponse> customers = customerService.getAllCustomers();
 
         if (customers.isEmpty()) {
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.notFound().build();
         } else {
             return ResponseEntity.ok(customers);
         }

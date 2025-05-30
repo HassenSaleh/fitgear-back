@@ -35,6 +35,8 @@ public class VendorService {
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+
+
     @Transactional
     public VendorResponse sign(VendorRequest vendorRequest) {
         Vendor vendor = vendorMapper.toVendor(vendorRequest);
