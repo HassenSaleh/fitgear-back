@@ -15,6 +15,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.UUID;
 
+@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
 @Setter
 @Getter
 @AllArgsConstructor
@@ -25,9 +26,9 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    @PostMapping("/register")
-    public ResponseEntity<AdminResponse> registerAdmin(@Valid @RequestBody AdminRequest dto) {
-        AdminResponse admin = adminService.registerAdmin(dto);
+    @PostMapping("/sign")
+    public ResponseEntity<AdminResponse> sign(@Valid @RequestBody AdminRequest dto) {
+        AdminResponse admin = adminService.sign(dto);
         if(admin != null ){
             URI location = ServletUriComponentsBuilder
                     .fromCurrentRequest()
@@ -65,13 +66,13 @@ public class AdminController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<Iterable<AdminResponse>> getAllAdmins() {
         Iterable<AdminResponse> admins = adminService.getAllAdmins();
         if(admins.iterator().hasNext()){
             return ResponseEntity.ok(admins);
         }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.notFound().build();
     }
 
 }

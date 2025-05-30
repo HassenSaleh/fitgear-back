@@ -35,7 +35,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/auth")
-
+@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
 public class AuthController {
     private final AuthenticationManager authManager;
     private final JwtService jwtService;

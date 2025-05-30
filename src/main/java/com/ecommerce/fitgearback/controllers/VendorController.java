@@ -27,8 +27,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/vendor")
-
+@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
 @PreAuthorize(value = "hasRole('VENDOR')")
+
 
 public class VendorController {
     private final VendorService vendorService;
@@ -40,7 +41,7 @@ public class VendorController {
         if(vendors.iterator().hasNext()){
             return ResponseEntity.ok(vendors);
         }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.notFound().build();
     }
 
     @PreAuthorize(value = "hasRole('VENDOR')")

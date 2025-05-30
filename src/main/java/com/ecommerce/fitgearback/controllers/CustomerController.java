@@ -24,7 +24,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/customer")
-
+@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
 @PreAuthorize(value = "hasRole('CUSTOMER')")
 
 public class CustomerController {

@@ -21,6 +21,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/user")
+@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
 public class UserController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;

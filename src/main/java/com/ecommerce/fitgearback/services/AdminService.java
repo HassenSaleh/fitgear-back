@@ -34,7 +34,7 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
 
-    public AdminResponse registerAdmin(AdminRequest dto){
+    public AdminResponse sign(AdminRequest dto){
         Admin admin = adminMapper.toAdmin(dto);
         admin.setPassword(passwordEncoder.encode(dto.getPassword()));
         Role role = roleRepository
