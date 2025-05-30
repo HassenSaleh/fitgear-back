@@ -1,6 +1,7 @@
 package com.ecommerce.fitgearback.filters;
 
 import com.ecommerce.fitgearback.services.JwtService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Map;
+
 @AllArgsConstructor
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -33,21 +36,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NotNull FilterChain filterChain) throws ServletException, IOException {
         var authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request,response);
+            sendUnauthorizedResponse(response,"Missing or malformed Authorization header");
             return;
         }
         var token = authHeader.replace("Bearer ", "");
-        if(jwtService.validateToken(token)) {
+        try {
+            if (jwtService.validateToken(token)) {
 
-            var authentication = new UsernamePasswordAuthenticationToken(
-                    jwtService.getUserIdFromToken(token),
-                    null,
-                    null
-            );
-            authentication.setDetails(new WebAuthenticationDetailsSource()
-                    .buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                var authentication = new UsernamePasswordAuthenticationToken(
+                        jwtService.getUserIdFromToken(token),
+                        null,
+                        null
+                );
+                authentication.setDetails(new WebAuthenticationDetailsSource()
+                        .buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+            filterChain.doFilter(request, response);
+        }catch (Exception e){
+            sendUnauthorizedResponse(response, "Invalid token: " + e.getMessage());
+            return;
         }
-        filterChain.doFilter(request,response);
+    }
+
+    private void sendUnauthorizedResponse(@NotNull HttpServletResponse response , String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+        response.setContentType("application/json");
+        response.getWriter().write(new ObjectMapper().writeValueAsString(
+                Map.of("error", message)
+        ));
+        response.getWriter().flush();
     }
 }
