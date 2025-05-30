@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -14,7 +15,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class CartItemRequest{
     @NotBlank(message = "Product id should not be null")
-    private Long productId;
+    private UUID productId;
     @NotBlank(message = "Quantity should not be null")
     private Integer quantity;
     @NotBlank(message = "Total price should not be null")

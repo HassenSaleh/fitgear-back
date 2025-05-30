@@ -16,4 +16,5 @@ public class JwtResponse {
     private String refreshToken;
     @JsonIgnore
     private List<String> roles;
+    private String redirectUrl;
 }

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -60,13 +61,18 @@ public class  CustomerService {
         customerRepository.deleteById(id);
     }
 
-    public CustomerResponse getById(Long id) {
-        Customer customer = customerRepository
-                .findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
+
+    public CustomerResponse getCustomerById(Long id) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + id));
         return customerMapper.toResponse(customer);
     }
 
+    public CustomerResponse getCustomerByEmail(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with email: " + email));
+        return customerMapper.toResponse(customer);
+    }
     public List<CustomerResponse> getAllCustomers() {
         return customerRepository
                 .findAll()

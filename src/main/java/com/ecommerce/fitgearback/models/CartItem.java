@@ -1,12 +1,16 @@
 package com.ecommerce.fitgearback.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static jakarta.persistence.GenerationType.*;
 @Entity
@@ -17,9 +21,11 @@ import static jakarta.persistence.GenerationType.*;
 @AllArgsConstructor
 public class CartItem {
     @Id
-    @GeneratedValue(strategy = IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    @Column(name = "quantity")
+    @Column(name = "quantity", nullable = false)
+    @NotNull
+    @Positive
     private Integer quantity;
     @ManyToOne
     @JoinColumn(name = "cart_id")
@@ -27,6 +33,7 @@ public class CartItem {
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
+
     public BigDecimal getTotalPrice() {
         return product.getPrice().multiply(BigDecimal.valueOf(quantity));
     }

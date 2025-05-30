@@ -7,12 +7,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface CartRepository extends JpaRepository<Cart,Long> {
     @EntityGraph(attributePaths = "items.product")
-    @Query("SELECT c FROM Cart c WHERE c.id = : cartId")
-    Optional<Cart> getCartWithItems(@Param("cartId") UUID cartId);
+    @Query("SELECT c FROM Cart c LEFT JOIN FETCH c.items i LEFT JOIN FETCH i.product WHERE c.id = :cartId")
+    Optional<Cart> getCartWithItems(@Param("cartId") Long cartId);
+
+    Optional<Cart> findByCustomerId(Long customerId);
 }

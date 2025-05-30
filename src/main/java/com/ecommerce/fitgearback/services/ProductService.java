@@ -9,6 +9,7 @@ import com.ecommerce.fitgearback.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 @AllArgsConstructor
 @Service
@@ -67,28 +69,48 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductResponse updateProduct(@NotNull Long id,@NotNull ProductRequest productRequest) {
+    public ProductResponse updateProduct(
+            @NotNull Long id,
+            @NotNull ProductRequest productRequest,
+            MultipartFile image) {
         var category = categoryRepository
                 .findById(productRequest.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid category ID"));
 
         var product = productRepository.findById(id)
-                    .orElseThrow(() -> new IllegalStateException("Product not found"));
+                .orElseThrow(() -> new IllegalStateException("Product not found"));
 
         productMapper.update(productRequest, product);
         product.setCategory(category);
+
+        if (image != null && !image.isEmpty()) {
+            try {
+                byte[] imageData = image.getBytes();
+                product.setImageData(imageData);
+                product.setImageType(image.getContentType());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read image", e);
+            }
+        }
+
         productRepository.save(product);
+
         var productResponse = productMapper.toProductResponse(product);
         productResponse.setId(product.getId());
         return productResponse;
     }
 
+
     @Transactional
-    public void deleteProduct (Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new NoSuchElementException("Product not found");
+    public void deleteProduct (Long productId,Long categoryId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found with ID: " + productId));
+
+        if (!product.getVendor().getId().equals(categoryId)) {
+            throw new AccessDeniedException("You are not authorized to delete this product.");
         }
-        productRepository.deleteById(id);
+
+        productRepository.delete(product);
     }
 
     public List<ProductResponse> getAllSorted(@NotNull String sortBy) {

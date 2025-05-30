@@ -9,13 +9,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 @Setter
 @Getter
@@ -26,7 +29,7 @@ import java.util.NoSuchElementException;
 public class ProductController {
     private final ProductService productService;
 
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<List<ProductResponse>> getAllProducts(@RequestParam(required = false) Long id){
         List<ProductResponse> products = productService.getAllProducts(id);
         if(products == null || products.isEmpty()){
@@ -35,7 +38,7 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/{categoryId}")
+    @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<ProductResponse>> getProductsByCategory(@PathVariable Long categoryId) {
         List<ProductResponse> products = productService.getAllProducts(categoryId);
         if (products.isEmpty()) {
@@ -56,7 +59,7 @@ public class ProductController {
 
     @GetMapping("/{id}/image")
     public ResponseEntity<byte[]> getProductImage(@PathVariable Long id) {
-        Product product = productService.getProductEntityById(id); // Return Product not DTO
+        Product product = productService.getProductEntityById(id);
         byte[] image = product.getImageData();
 
         if (image == null || image.length == 0) {
@@ -69,9 +72,7 @@ public class ProductController {
     }
 
 
-
-
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping(value = "/", consumes = {"multipart/form-data"})
     public ResponseEntity<ProductResponse> createProduct(
             @Valid @RequestPart("product") ProductRequest productRequest,
             @Valid @RequestPart(value = "image", required = false) MultipartFile image,
@@ -79,7 +80,7 @@ public class ProductController {
         try {
             ProductResponse createdProduct = productService.createProduct(productRequest, image);
             var uri = uriBuilder
-                    .path("/products/{id}")
+                    .path("/api/v1/product/{id}")
                     .buildAndExpand(createdProduct.getId())
                     .toUri();
             return ResponseEntity.created(uri).body(createdProduct);
@@ -88,13 +89,14 @@ public class ProductController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id,
-            @RequestBody ProductRequest productRequest) {
+            @Valid @RequestPart("product") ProductRequest productRequest,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
 
         try {
-            ProductResponse updatedProduct = productService.updateProduct(id, productRequest);
+            ProductResponse updatedProduct = productService.updateProduct(id, productRequest, image);
             return ResponseEntity.ok(updatedProduct);
         } catch (IllegalStateException e) {
             return ResponseEntity.notFound().build();
@@ -102,16 +104,17 @@ public class ProductController {
     }
 
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+    @DeleteMapping("/vendor/{vendorId}/product/{productId}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId, @PathVariable Long vendorId) {
         try {
-            productService.deleteProduct(id);
+            productService.deleteProduct(productId, vendorId);
             return ResponseEntity.noContent().build();
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
-
 
     @GetMapping("/sorted")
     public ResponseEntity<List<ProductResponse>> getSortedProducts(

@@ -1,28 +1,37 @@
 package com.ecommerce.fitgearback.controllers;
 
+import com.ecommerce.fitgearback.dtos.product.ProductRequest;
+import com.ecommerce.fitgearback.dtos.product.ProductResponse;
 import com.ecommerce.fitgearback.dtos.vendor.*;
+import com.ecommerce.fitgearback.models.Product;
+import com.ecommerce.fitgearback.services.ProductService;
 import com.ecommerce.fitgearback.services.VendorService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.UUID;
 
 @Setter
 @Getter
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/vendor")
+
 @PreAuthorize(value = "hasRole('VENDOR')")
 
 public class VendorController {
     private final VendorService vendorService;
+    private final ProductService productService;
 
     @GetMapping("/")
     public ResponseEntity<Iterable<VendorResponse>> getAllVendors() {
@@ -32,6 +41,13 @@ public class VendorController {
         }
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{vendorId}/dashboard")
+    public ResponseEntity<VendorDashboardResponse> getDashboard(@PathVariable Long vendorId) {
+        VendorDashboardResponse response = vendorService.getDashboard(vendorId);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<VendorResponse> getVendorById(@PathVariable Long id) {
         VendorResponse vendor = vendorService.getVendorById(id);
@@ -70,4 +86,21 @@ public class VendorController {
         vendorService.deleteVendor(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping(value = "/product", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProductResponse> addProduct(
+            @Valid @RequestPart("product") ProductRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        ProductResponse createdProduct = productService.createProduct(request, image);
+        return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
+    }
+
+
+    @DeleteMapping("/product/{id}")
+    public ResponseEntity<String> deleteProduct(@PathVariable Long id, @RequestParam Long vendorId) {
+        productService.deleteProduct(id, vendorId);
+        return ResponseEntity.ok("Product deleted successfully");
+    }
+
+
 }

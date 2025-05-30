@@ -5,8 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.UuidGenerator;
+import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
+import java.util.UUID;
+
 @Entity
 @Table(name = "order_items")
 @Setter
@@ -14,7 +18,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class OrderItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     private Integer quantity;
@@ -29,7 +33,7 @@ public class OrderItem {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    public OrderItem(Order order, Product product, Integer quantity) {
+    public OrderItem(Order order, @NotNull Product product, Integer quantity) {
         this.order = order;
         this.product = product;
         this.quantity = quantity;

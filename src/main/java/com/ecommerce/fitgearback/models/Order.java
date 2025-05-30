@@ -4,10 +4,14 @@ import com.ecommerce.fitgearback.enums.OrderStatus;
 import com.ecommerce.fitgearback.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
+import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "orders")
@@ -18,7 +22,7 @@ import java.util.List;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     private BigDecimal totalAmount;
@@ -32,26 +36,28 @@ public class Order {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderItem> items;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     @ToString.Exclude
     private Payment payment;
 
-    public static Order fromCart(Cart cart, Customer customer) {
+    public static Order fromCart(@NotNull Cart cart, Customer customer) {
         var order = new Order();
         order.setCustomer(customer);
         order.setStatus(PaymentStatus.PENDING);
         order.setTotalAmount(cart.getTotalPrice());
+        order.setItems(new ArrayList<>());
 
         cart.getItems().forEach(item -> {
             var orderItem = new OrderItem(order, item.getProduct(), item.getQuantity());
-            order.items.add(orderItem);
+            order.getItems().add(orderItem);
         });
 
         return order;
     }
+
 
     public boolean isPlacedBy(Customer customer) {
         return this.customer.equals(customer);

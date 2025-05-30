@@ -5,9 +5,7 @@ import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
 import com.ecommerce.fitgearback.mappers.VendorMapper;
 import com.ecommerce.fitgearback.models.Role;
 import com.ecommerce.fitgearback.models.Vendor;
-import com.ecommerce.fitgearback.repositories.RoleRepository;
-import com.ecommerce.fitgearback.repositories.UserRepository;
-import com.ecommerce.fitgearback.repositories.VendorRepository;
+import com.ecommerce.fitgearback.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,8 +17,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Setter
@@ -29,11 +29,12 @@ import java.util.stream.Collectors;
 @Service
 public class VendorService {
     private final VendorRepository vendorRepository;
-    private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final VendorMapper vendorMapper;
-
+    private final OrderRepository orderRepository;
+    private final CustomerRepository customerRepository;
+    private final ProductRepository productRepository;
     @Transactional
     public VendorResponse sign(VendorRequest vendorRequest) {
         Vendor vendor = vendorMapper.toVendor(vendorRequest);
@@ -42,7 +43,7 @@ public class VendorService {
                 .findByName("VENDOR")
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         vendor.setRoles(Collections.singleton(vendorRole));
-        Vendor savedVendor = userRepository.save(vendor);
+        Vendor savedVendor = vendorRepository.save(vendor);
         return vendorMapper.toResponse(savedVendor);
     }
 
@@ -90,4 +91,14 @@ public class VendorService {
                 Collections.emptyList()
         );
     }
+
+    public VendorDashboardResponse getDashboard(Long vendorId) {
+        long totalOrders = orderRepository.countOrdersByVendorId(vendorId);
+        long totalCustomers = orderRepository.countDistinctCustomersByVendorId(vendorId);
+        long totalProducts = productRepository.countByVendorId(vendorId);
+        BigDecimal totalRevenue = orderRepository.calculateTotalRevenueByVendorId(vendorId);
+
+        return new VendorDashboardResponse(totalOrders, totalCustomers, totalProducts, totalRevenue);
+    }
+
 }

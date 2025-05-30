@@ -17,15 +17,16 @@ import java.util.Set;
 public abstract class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     @Column(nullable = false, unique = true)
+    private String firstName;
+    private String lastName;
     private String email;
     @Column(nullable = false)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
-    private String firstName;
-    private String lastName;
+
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

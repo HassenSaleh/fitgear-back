@@ -17,6 +17,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.UUID;
+
 @Setter
 @Getter
 @AllArgsConstructor
@@ -28,11 +30,10 @@ import java.util.List;
 public class CustomerController {
     private final CustomerService customerService;
     private final CustomerMapper customerMapper;
-    private final PasswordEncoder passwordEncoder;
 
     @PreAuthorize(value = "hasRole('CUSTOMER')")
 
-    @GetMapping("/login")
+    @GetMapping("/all")
     public ResponseEntity<List<CustomerResponse>> getAll() {
         List<CustomerResponse> customers = customerService.getAllCustomers();
 
@@ -42,6 +43,15 @@ public class CustomerController {
             return ResponseEntity.ok(customers);
         }
     }
+    @PreAuthorize(value = "hasRole('CUSTOMER')")
+    @GetMapping("/{id}")
+    public ResponseEntity<CustomerResponse> getCustomerById(@PathVariable Long id) {
+        CustomerResponse customer = customerService.getCustomerById(id);
+        if (customer == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(customer);
+    }
 
     @PermitAll
     @PostMapping("/sign")
@@ -50,7 +60,7 @@ public class CustomerController {
         if (response != null) {
             URI location = ServletUriComponentsBuilder
                     .fromCurrentRequest()
-                    .path("/customer/{id}")
+                    .path("/{id}")
                     .buildAndExpand(response.getId())
                     .toUri();
             return ResponseEntity.created(location).body(response);

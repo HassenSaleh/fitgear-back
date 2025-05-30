@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Setter
 @Getter
 @AllArgsConstructor
@@ -13,6 +15,6 @@ public class LoginResponse {
     private Long id;
     private String token;
     private String email;
-    private String role; // e.g. "ADMIN", "VENDOR", "CUSTOMER"
+    private String role;
     private String message;
 }

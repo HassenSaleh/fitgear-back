@@ -8,6 +8,7 @@ import com.ecommerce.fitgearback.models.Vendor;
 import org.mapstruct.*;
 
 import java.util.Base64;
+import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {

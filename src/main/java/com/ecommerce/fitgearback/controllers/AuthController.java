@@ -1,6 +1,7 @@
 package com.ecommerce.fitgearback.controllers;
 
 import com.ecommerce.fitgearback.Configurations.JwtConfig;
+import com.ecommerce.fitgearback.dtos.login.JwtRequest;
 import com.ecommerce.fitgearback.dtos.login.JwtResponse;
 import com.ecommerce.fitgearback.dtos.login.LoginRequest;
 import com.ecommerce.fitgearback.mappers.AdminMapper;
@@ -18,6 +19,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,6 +27,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @Setter
 @Getter
@@ -62,16 +66,24 @@ public class AuthController {
                 cookie.setHttpOnly(true);
                 cookie.setPath("/auth/refresh");
                 cookie.setMaxAge(config.getRefreshTokenExpiration());
-                cookie.setSecure(true);
+                cookie.setSecure(false);
                 response.addCookie(cookie);
                 var roles = user.getRoles().stream()
                     .map(Role::getName)
                     .toList();
-
+            String redirectUrl = "/login";
+            if (roles.contains("ADMIN")) {
+                redirectUrl = "/admin/dashboard";
+            } else if (roles.contains("VENDOR")) {
+                redirectUrl = "/vendor/dashboard";
+            } else if (roles.contains("CUSTOMER")) {
+                redirectUrl = "/customer/home";
+            }
         return ResponseEntity.ok(new JwtResponse(
                 accessToken,
                 refreshToken,
-                roles)
+                roles,
+                redirectUrl)
         );
     }
 
@@ -82,16 +94,25 @@ public class AuthController {
         if(!jwtService.validateToken(refreshToken)){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        var userId = jwtService.getUserIdFromToken(refreshToken);
+        var userId =  jwtService.getUserIdFromToken(refreshToken);
         var user = userRepository.findById(userId).orElseThrow();
         var accessToken = jwtService.generateAccessToken(user);
         var roles = user.getRoles().stream()
                 .map(Role::getName)
                 .toList();
+        String redirectUrl = "/login";
+        if (roles.contains("ADMIN")) {
+            redirectUrl = "/admin/dashboard";
+        } else if (roles.contains("VENDOR")) {
+            redirectUrl = "/vendor/dashboard";
+        } else if (roles.contains("CUSTOMER")) {
+            redirectUrl = "/customer/home";
+        }
         return ResponseEntity.ok(new JwtResponse(
                 accessToken,
                 null,
-                roles)
+                roles,
+                redirectUrl)
         );
     }
     //works for all now
