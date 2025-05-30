@@ -15,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CartItemRequest{
     @NotBlank(message = "Product id should not be null")
-    private UUID productId;
+    private Long productId;
     @NotBlank(message = "Quantity should not be null")
     private Integer quantity;
     @NotBlank(message = "Total price should not be null")

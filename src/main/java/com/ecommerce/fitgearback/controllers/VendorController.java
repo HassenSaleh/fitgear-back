@@ -22,19 +22,19 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.UUID;
 
+@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
+@PreAuthorize(value = "hasRole('VENDOR')")
 @Setter
 @Getter
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/vendor")
-@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
-@PreAuthorize(value = "hasRole('VENDOR')")
-
 
 public class VendorController {
     private final VendorService vendorService;
     private final ProductService productService;
-    @PermitAll
+
+    @PreAuthorize(value = "hasRole('VENDOR')")
     @GetMapping("/all")
     public ResponseEntity<Iterable<VendorResponse>> getAllVendors() {
         Iterable<VendorResponse> vendors = vendorService.getAllVendors();
@@ -43,6 +43,7 @@ public class VendorController {
         }
         return ResponseEntity.notFound().build();
     }
+
 
     @PreAuthorize(value = "hasRole('VENDOR')")
     @GetMapping("/{vendorId}/dashboard")
@@ -61,7 +62,7 @@ public class VendorController {
         return ResponseEntity.notFound().build();
     }
 
-    @PermitAll
+    @PreAuthorize(value = "hasRole('VENDOR')")
     @PostMapping("/sign")
     public ResponseEntity<VendorResponse> sign(@Valid @RequestBody VendorRequest request) {
         VendorResponse response = vendorService.sign(request);
@@ -87,6 +88,7 @@ public class VendorController {
         return ResponseEntity.ok(updatedVendor);
     }
 
+    @PreAuthorize(value = "hasRole('VENDOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVendor(@PathVariable Long id) {
         vendorService.deleteVendor(id);
@@ -109,6 +111,5 @@ public class VendorController {
         productService.deleteProduct(id, vendorId);
         return ResponseEntity.ok("Product deleted successfully");
     }
-
 
 }

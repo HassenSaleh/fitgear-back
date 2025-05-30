@@ -75,13 +75,13 @@ public class AdminService {
                 .toList();
     }
 
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    public AdminResponse getAdminByUsername(String email) throws UsernameNotFoundException {
         var admin = adminRepository.findByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("Admin not found with email: " + email));
-        return new User(
-                admin.getEmail(),
-                admin.getPassword(),
-                Collections.emptyList()
-        );
+        if (admin == null) {
+            return null;
+        }
+        return adminMapper.toResponse(admin);
+
     }
 }

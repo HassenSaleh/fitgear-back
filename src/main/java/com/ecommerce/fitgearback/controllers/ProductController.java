@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
@@ -20,17 +21,18 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
+
 @Setter
 @Getter
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/product")
-@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
 
 public class ProductController {
     private final ProductService productService;
 
-    @GetMapping("/")
+    @GetMapping("/all")
     public ResponseEntity<List<ProductResponse>> getAllProducts(@RequestParam(required = false) Long id){
         List<ProductResponse> products = productService.getAllProducts(id);
         if(products == null || products.isEmpty()){
@@ -73,7 +75,7 @@ public class ProductController {
     }
 
 
-    @PostMapping(value = "/", consumes = {"multipart/form-data"})
+    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductResponse> createProduct(
             @Valid @RequestPart("product") ProductRequest productRequest,
             @Valid @RequestPart(value = "image", required = false) MultipartFile image,
@@ -90,7 +92,7 @@ public class ProductController {
         }
     }
 
-    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id,
             @Valid @RequestPart("product") ProductRequest productRequest,

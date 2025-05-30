@@ -16,12 +16,14 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.UUID;
 
+@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
+
 @Setter
 @Getter
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/user")
-@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
+
 public class UserController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
