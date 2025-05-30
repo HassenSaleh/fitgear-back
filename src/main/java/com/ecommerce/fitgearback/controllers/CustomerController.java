@@ -3,6 +3,7 @@ package com.ecommerce.fitgearback.controllers;
 import com.ecommerce.fitgearback.dtos.customer.*;
 import com.ecommerce.fitgearback.mappers.CustomerMapper;
 import com.ecommerce.fitgearback.services.CustomerService;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,13 +29,27 @@ public class CustomerController {
     private final CustomerMapper customerMapper;
     private final PasswordEncoder passwordEncoder;
 
-    @PostMapping
-    public ResponseEntity<CustomerResponse> registerCustomer(@Valid @RequestBody CustomerRequest request) {
-        CustomerResponse response = customerService.registerCustomer(request);
+    @PreAuthorize(value = "hasRole('CUSTOMER')")
+
+    @GetMapping("/login")
+    public ResponseEntity<List<CustomerResponse>> getAll() {
+        List<CustomerResponse> customers = customerService.getAllCustomers();
+
+        if (customers.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.ok(customers);
+        }
+    }
+
+    @PermitAll
+    @PostMapping("/sign")
+    public ResponseEntity<CustomerResponse> sign(@Valid @RequestBody CustomerRequest request) {
+        CustomerResponse response = customerService.sign(request);
         if (response != null) {
             URI location = ServletUriComponentsBuilder
                     .fromCurrentRequest()
-                    .path("/users/{id}")
+                    .path("/customer/{id}")
                     .buildAndExpand(response.getId())
                     .toUri();
             return ResponseEntity.created(location).body(response);
@@ -51,16 +66,8 @@ public class CustomerController {
         }
         return ResponseEntity.ok(updatedCustomer);
     }
-    @GetMapping
-    public ResponseEntity<List<CustomerResponse>> getAll() {
-        List<CustomerResponse> customers = customerService.getAllCustomers();
 
-        if (customers.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.ok(customers);
-        }
-    }
+    @PreAuthorize("hasRole('CUSTOMER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
         customerService.deleteCustomer(id);

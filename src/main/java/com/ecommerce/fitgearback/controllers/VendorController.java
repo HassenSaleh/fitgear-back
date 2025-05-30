@@ -24,7 +24,7 @@ import java.net.URI;
 public class VendorController {
     private final VendorService vendorService;
 
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<Iterable<VendorResponse>> getAllVendors() {
         Iterable<VendorResponse> vendors = vendorService.getAllVendors();
         if(vendors.iterator().hasNext()){
@@ -41,9 +41,9 @@ public class VendorController {
         return ResponseEntity.notFound().build();
     }
 
-    @PostMapping
-    public ResponseEntity<VendorResponse> registerVendor(@Valid @RequestBody VendorRequest request) {
-        VendorResponse response = vendorService.registerVendor(request);
+    @PostMapping("/sign")
+    public ResponseEntity<VendorResponse> sign(@Valid @RequestBody VendorRequest request) {
+        VendorResponse response = vendorService.sign(request);
         if (response != null) {
             URI location = ServletUriComponentsBuilder
                     .fromCurrentRequest()

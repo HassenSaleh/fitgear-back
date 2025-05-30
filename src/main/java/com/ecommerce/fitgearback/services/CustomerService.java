@@ -29,7 +29,7 @@ public class  CustomerService {
     private final CustomerMapper customerMapper;
     private final RoleRepository roleRepository;
 
-    public CustomerResponse registerCustomer(@NotNull CustomerRequest request) {
+    public CustomerResponse sign(@NotNull CustomerRequest request) {
         Customer customer = customerMapper.toCustomer(request);
         customer.setPassword(passwordEncoder.encode(request.getPassword()));
         Role role = roleRepository

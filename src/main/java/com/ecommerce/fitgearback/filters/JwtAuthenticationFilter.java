@@ -18,6 +18,14 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JwtService jwtService;
+
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        // Skip authentication for these public paths
+        return path.startsWith("/api/v1/customer/") || path.startsWith("/api/v1/auth/");
+    }
     @Override
     protected void doFilterInternal(
             @NotNull HttpServletRequest request,
@@ -29,18 +37,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         var token = authHeader.replace("Bearer ", "");
-        if(jwtService.validateToken(token)){
-            filterChain.doFilter(request,response);
-            return;
+        if(jwtService.validateToken(token)) {
+
+            var authentication = new UsernamePasswordAuthenticationToken(
+                    jwtService.getUserIdFromToken(token),
+                    null,
+                    null
+            );
+            authentication.setDetails(new WebAuthenticationDetailsSource()
+                    .buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
-        var authentication = new UsernamePasswordAuthenticationToken(
-                jwtService.getUserIdFromToken(token),
-                null,
-                null
-        );
-        authentication.setDetails(new WebAuthenticationDetailsSource()
-                .buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request,response);
     }
 }

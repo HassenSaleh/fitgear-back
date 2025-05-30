@@ -35,7 +35,7 @@ public class VendorService {
     private final VendorMapper vendorMapper;
 
     @Transactional
-    public VendorResponse registerVendor(VendorRequest vendorRequest) {
+    public VendorResponse sign(VendorRequest vendorRequest) {
         Vendor vendor = vendorMapper.toVendor(vendorRequest);
         vendor.setPassword(passwordEncoder.encode(vendorRequest.getPassword()));
         Role vendorRole = roleRepository

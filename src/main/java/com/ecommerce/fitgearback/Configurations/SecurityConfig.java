@@ -11,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -26,6 +27,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @AllArgsConstructor
 @Configuration
 @EnableWebSecurity
+//@EnableMethodSecurity
 public class SecurityConfig {
     private final UserDetailsService userService;
     private final PasswordEncoder passwordEncoder;
@@ -42,7 +44,7 @@ public class SecurityConfig {
                         .authorizeHttpRequests(c -> c
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/customer/**").hasRole("CUSTOMER")
+                        .requestMatchers("/api/v1/customer/**").permitAll()
                         .requestMatchers("/api/v1/vendor/**").hasRole("VENDOR")
                         .requestMatchers("/api/v1/product/**").permitAll()
                         .requestMatchers("/api/v1/category/**").permitAll()

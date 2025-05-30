@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/auth")
+
 public class AuthController {
     private final AuthenticationManager authManager;
     private final JwtService jwtService;
@@ -98,7 +99,7 @@ public class AuthController {
     public ResponseEntity<?> test(){
         var auth = SecurityContextHolder.getContext().getAuthentication();
         var userId = (Long) auth.getPrincipal();
-        var userOpt = customerRepository.findById(userId);
+        var userOpt = userRepository.findById(userId);
         if(userOpt.isEmpty()){
             return ResponseEntity.notFound().build();
         }
