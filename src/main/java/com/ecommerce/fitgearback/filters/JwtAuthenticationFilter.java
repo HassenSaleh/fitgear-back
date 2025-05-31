@@ -27,10 +27,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(@NotNull HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
         // Skip authentication for these public paths
-        return path.startsWith("/api/v1/customer/") || path.startsWith("/api/v1/auth/") || path.startsWith("/api/v1/vendor/") || path.startsWith("/api/v1/admin/") || path.startsWith("/api/v1/order/")|| path.startsWith("/api/v1/product/") || path.startsWith("/api/v1/cart/") || path.startsWith("/api/v1/payment/") ;
+        return path.startsWith("/api/v1/customer/") || path.startsWith("/api/v1/auth/") ||
+                path.startsWith("/api/v1/vendor/") || path.startsWith("/api/v1/admin/") ||
+                path.startsWith("/api/v1/order/") || path.startsWith("/api/v1/product/") ||
+                path.startsWith("/api/v1/cart/") || path.startsWith("/api/v1/payment/") ;
     }
     @Override
     protected void doFilterInternal(

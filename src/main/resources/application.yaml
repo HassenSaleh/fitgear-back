@@ -10,13 +10,14 @@ spring:
   main:
     allow-circular-references: true
   datasource:
-    url: jdbc:mysql://localhost:3306/fitGearBack?createDatabaseIfNotExist=true
-    username: root
+    url: jdbc:postgresql://localhost:5432/fitgear
+    username=: postgres
     password: salmen25
+    driver-class-name: org.postgresql.Driver
   jpa:
     show-sql: true
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect

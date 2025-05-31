@@ -50,4 +50,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o WHERE o.id = :orderId")
     Optional<Order> getOrderWithItems(@Param("orderId") Long orderId);
 
+    List<Order> findByCustomerId(Long customerId);
+
+    @Query("SELECT o FROM Order o JOIN o.products p WHERE p.vendor.id = :vendorId")
+    List<Order> findByProductsVendorId(@Param("vendorId") Long vendorId);
+
 }

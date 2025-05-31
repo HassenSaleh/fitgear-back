@@ -29,7 +29,8 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
-
+    private String shippingAddress;
+    private String paymentMethod;
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne
@@ -58,6 +59,8 @@ public class Order {
         return order;
     }
 
+    @ManyToMany
+    private List<Product> products;
 
     public boolean isPlacedBy(Customer customer) {
         return this.customer.equals(customer);

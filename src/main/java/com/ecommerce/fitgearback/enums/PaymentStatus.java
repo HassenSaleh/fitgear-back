@@ -1,5 +1,5 @@
 package com.ecommerce.fitgearback.enums;
 
 public enum PaymentStatus {
-    PAID, FAILED, PENDING
+    PAID, FAILED, PENDING, CANCELLED,PLACED
 }

@@ -22,7 +22,7 @@ import java.util.List;
 public class OrderController {
     private final OrderService orderService;
 
-    @GetMapping
+    @GetMapping("/all")
     public List<OrderResponse> getAllOrders() {
         return orderService.getAllOrders();
     }

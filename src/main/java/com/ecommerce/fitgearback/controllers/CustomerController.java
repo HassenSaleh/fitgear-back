@@ -1,8 +1,10 @@
 package com.ecommerce.fitgearback.controllers;
 
 import com.ecommerce.fitgearback.dtos.customer.*;
+import com.ecommerce.fitgearback.dtos.order.OrderResponse;
 import com.ecommerce.fitgearback.mappers.CustomerMapper;
 import com.ecommerce.fitgearback.services.CustomerService;
+import com.ecommerce.fitgearback.services.OrderService;
 import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -10,7 +12,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -30,6 +35,7 @@ import java.util.List;
 public class CustomerController {
     private final CustomerService customerService;
     private final CustomerMapper customerMapper;
+    private final OrderService orderService;
 
     @PreAuthorize(value = "hasRole('CUSTOMER')")
     @GetMapping("/all")
@@ -99,6 +105,36 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(customer);
+    }
+
+
+    @GetMapping("/my-orders")
+    public List<OrderResponse> getMyOrders() {
+        Long userId = getCurrentUserId();
+
+        if (hasRole("CUSTOMER")) {
+            return orderService.getOrdersByCustomerId(userId);
+        }
+
+        if (hasRole("VENDOR")) {
+            return orderService.getOrdersByVendorId(userId); // via products -> vendor
+        }
+
+        throw new AccessDeniedException("Not authorized");
+    }
+
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Long userId)) {
+            throw new AccessDeniedException("Unauthorized");
+        }
+        return userId;
+    }
+
+    private boolean hasRole(String role) {
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(auth -> auth.equals( role));
     }
 
 }
