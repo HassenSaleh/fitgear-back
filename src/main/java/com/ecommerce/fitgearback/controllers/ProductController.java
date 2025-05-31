@@ -4,6 +4,8 @@ import com.ecommerce.fitgearback.dtos.product.ProductRequest;
 import com.ecommerce.fitgearback.dtos.product.ProductResponse;
 import com.ecommerce.fitgearback.models.Product;
 import com.ecommerce.fitgearback.services.ProductService;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -60,8 +62,18 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
+    @GetMapping("/search/{search}")
+    public ResponseEntity<List<ProductResponse>> searchProduct(@PathVariable String search) {
+        List<ProductResponse> products = productService.searchProduct(search);
+        if (products.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(products);
+    }
+
+
     @GetMapping("/{id}/image")
-    public ResponseEntity<byte[]> getProductImage(@PathVariable Long id) {
+    public ResponseEntity<Resource> getProductImage(@PathVariable Long id) {
         Product product = productService.getProductEntityById(id);
         byte[] image = product.getImageData();
 
@@ -69,10 +81,14 @@ public class ProductController {
             return ResponseEntity.notFound().build();
         }
 
+        // Wrap byte[] in ByteArrayResource
+        ByteArrayResource resource = new ByteArrayResource(image);
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, product.getImageType() != null ? product.getImageType() : "image/jpeg")
-                .body(image);
+                .body(resource);
     }
+
 
 
     @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -105,7 +121,6 @@ public class ProductController {
             return ResponseEntity.notFound().build();
         }
     }
-
 
     @DeleteMapping("/vendor/{vendorId}/product/{productId}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long productId, @PathVariable Long vendorId) {

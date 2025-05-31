@@ -19,6 +19,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p")
     List<Product> findAllWithCategory();
 
+    @Query("SELECT p FROM Product p WHERE " +
+            " LOWER(p.brand) LIKE LOWER(CONCAT('%', ':keyword', '%')) OR " +
+            "LOWER(p.description) LIKE LOWER(CONCAT('%',':keyword','%')) OR "+
+            "LOWER(p.name) LIKE(CONCAT('%',':keyword','%'))"
+    )
+    List<Product> searchAllBy(String keyword);
+
+
     List<Product> findAllByOrderByPriceAsc();
     List<Product> findAllByOrderByPriceDesc();
     List<Product> findAllByOrderByStockAsc();
@@ -26,6 +34,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByOrderByNameAsc();
     List<Product> findAllByOrderByNameDesc();
     Long countByVendorId(Long vendor_id);
+    Optional<Product> getProductByVendorId(Long id);
 
     @NotNull Optional<Product> findById(@NotNull Long productId);
 }

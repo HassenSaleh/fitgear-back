@@ -20,10 +20,10 @@ public class ProductResponse {
     private BigDecimal price;
     private Integer stock;
     private LocalDateTime createdAt;
+    private ProductStatus status;
     private String imageName;
     private String imageType;
     private String imageUrl;
-    private Boolean active;
     private Long quantity;
     private String imageBase64;
     private Long vendorId;

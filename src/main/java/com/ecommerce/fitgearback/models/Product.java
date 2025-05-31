@@ -1,5 +1,6 @@
 package com.ecommerce.fitgearback.models;
 
+import com.ecommerce.fitgearback.dtos.product.ProductStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -23,16 +24,17 @@ public class Product {
     private String description;
     private BigDecimal price;
     private Integer stock;
+    private String brand;
 
     private LocalDateTime createdAt;
 
     private String imageName;
     private String imageType;
-
     @Lob
     private byte[] imageData;
 
-    private Boolean active = true;
+    @Enumerated(EnumType.STRING)
+    private ProductStatus active = ProductStatus.ACTIVE;
     private Long quantity;
 
     @ManyToOne

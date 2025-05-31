@@ -8,6 +8,7 @@ import com.ecommerce.fitgearback.models.Vendor;
 import org.mapstruct.*;
 
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 @Mapper(componentModel = "spring")
@@ -19,7 +20,7 @@ public interface ProductMapper {
     @Mapping(target = "categoryName", source = "category.name")
     @Mapping(target = "imageBase64", expression = "java(product.getImageData() != null ? java.util.Base64.getEncoder().encodeToString(product.getImageData()) : null)")
     ProductResponse toProductResponse(Product product);
-
+    List<ProductResponse> toProductResponseList(List<Product> product);
     @Mapping(target = "vendor", expression = "java(mapVendor(productRequest.getVendorId()))")
     @Mapping(target = "category", expression = "java(mapCategory(productRequest.getCategoryId()))")
     Product toProduct(ProductRequest productRequest);
@@ -46,5 +47,6 @@ public interface ProductMapper {
         category.setId(categoryId);
         return category;
     }
+
 
 }

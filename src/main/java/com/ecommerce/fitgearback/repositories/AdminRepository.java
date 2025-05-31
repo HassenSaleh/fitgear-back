@@ -15,6 +15,6 @@ import java.util.UUID;
 public interface AdminRepository extends JpaRepository<Admin, Long> {
     Optional<Admin> findByEmail(String email);
     boolean existsByEmail(String email);
-
     @NotNull Optional<Admin> findById(@NotNull Long userId);
+    @NotNull Optional<Admin> findByEmailAndPassword(@NotNull String email, @NotNull String password);
 }

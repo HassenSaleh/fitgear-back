@@ -14,10 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 @AllArgsConstructor
 @Service
@@ -44,6 +44,21 @@ public class ProductService {
         return productMapper.toProductResponse(product);
     }
 
+    public List<ProductResponse> getProductByCategory(Long categoryId){
+        List<Product> product = productRepository.findByCategoryId(categoryId);
+        return productMapper.toProductResponseList(product);
+    }
+
+    public List<ProductResponse> getProductByVendor(Long id){
+        Optional<Product> product = productRepository.getProductByVendorId(id);
+        return productMapper.toProductResponseList(product.stream().toList());
+    }
+
+    public List<ProductResponse> searchProduct(String search){
+        List<Product> products = productRepository.searchAllBy(search);
+        return productMapper.toProductResponseList(products);
+    }
+
     @Transactional
     public ProductResponse createProduct(@NotNull ProductRequest productRequest, MultipartFile image) {
         var category = categoryRepository
@@ -57,6 +72,14 @@ public class ProductService {
             try {
                 byte[] imageData = image.getBytes();
                 product.setImageData(imageData);
+
+                String imageName = "product-" + UUID.randomUUID() + "." + getExtension(image.getOriginalFilename());
+                Path imagePath = Paths.get("uploads", imageName);
+                Files.copy(image.getInputStream(), imagePath);
+
+                product.setImageName(imageName);
+                product.setImageType(image.getContentType());
+                product.setImageData(null);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to read image", e);
             }
@@ -64,6 +87,7 @@ public class ProductService {
 
         productRepository.save(product);
         var productResponse = productMapper.toProductResponse(product);
+        productResponse.setImageUrl("/uploads/" + product.getImageName());
         productResponse.setId(product.getId());
         return productResponse;
     }
@@ -88,6 +112,10 @@ public class ProductService {
                 byte[] imageData = image.getBytes();
                 product.setImageData(imageData);
                 product.setImageType(image.getContentType());
+
+                String imageName = "product-" + UUID.randomUUID() + "." + getExtension(image.getOriginalFilename());
+                Path imagePath = Paths.get("uploads", imageName);
+                Files.copy(image.getInputStream(), imagePath);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to read image", e);
             }
@@ -134,6 +162,11 @@ public class ProductService {
     public Product getProductEntityById(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Product not found with ID: " + id));
+    }
+
+
+    private String getExtension(String filename) {
+        return filename.substring(filename.lastIndexOf('.') + 1);
     }
 
 

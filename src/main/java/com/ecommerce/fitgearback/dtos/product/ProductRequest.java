@@ -3,6 +3,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -18,6 +19,7 @@ public class ProductRequest {
     private Integer stock;
     private Long vendorId;
     private Long categoryId;
-    private Boolean active;
+    private ProductStatus status;
     private Long quantity;
+    private MultipartFile image;
 }

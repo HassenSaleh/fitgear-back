@@ -96,7 +96,6 @@ public class AdminController {
 
         String username = authentication.getName();
 
-
         AdminResponse adminResponse = adminService.getAdminByUsername(username);
 
         if (adminResponse == null) {
@@ -104,6 +103,5 @@ public class AdminController {
         }
         return ResponseEntity.ok(adminResponse);
     }
-
 
 }
