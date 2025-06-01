@@ -1,17 +1,14 @@
 package com.ecommerce.fitgearback.models;
 
 import com.ecommerce.fitgearback.enums.OrderStatus;
+import com.ecommerce.fitgearback.enums.PaymentMethod;
 import com.ecommerce.fitgearback.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.UuidGenerator;
-import org.jetbrains.annotations.NotNull;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "orders")
@@ -22,16 +19,22 @@ import java.util.UUID;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
-    private PaymentStatus status;
+    private OrderStatus status;
+
     private String shippingAddress;
-    private String paymentMethod;
-    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
+
+    private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
@@ -44,24 +47,18 @@ public class Order {
     @ToString.Exclude
     private Payment payment;
 
-    public static Order fromCart(@NotNull Cart cart, Customer customer) {
-        var order = new Order();
-        order.setCustomer(customer);
-        order.setStatus(PaymentStatus.PENDING);
-        order.setTotalAmount(cart.getTotalPrice());
-        order.setItems(new ArrayList<>());
-
-        cart.getItems().forEach(item -> {
-            var orderItem = new OrderItem(order, item.getProduct(), item.getQuantity());
-            order.getItems().add(orderItem);
-        });
-
-        return order;
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
     }
 
-    @ManyToMany
-    private List<Product> products;
-
+    public void setItems(List<OrderItem> items) {
+        this.items.clear();
+        if (items != null) {
+            items.forEach(item -> item.setOrder(this));
+            this.items.addAll(items);
+        }
+    }
     public boolean isPlacedBy(Customer customer) {
         return this.customer.equals(customer);
     }

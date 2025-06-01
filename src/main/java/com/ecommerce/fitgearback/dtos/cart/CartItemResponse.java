@@ -1,12 +1,10 @@
 package com.ecommerce.fitgearback.dtos.cart;
-import com.ecommerce.fitgearback.dtos.product.ProductResponse;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -14,7 +12,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CartItemResponse {
     private Long id;
-    private ProductResponse product;
+    private Long productId;
+    private String productName;
+    private BigDecimal price;
     private Integer quantity;
-    private BigDecimal totalPrice;
 }

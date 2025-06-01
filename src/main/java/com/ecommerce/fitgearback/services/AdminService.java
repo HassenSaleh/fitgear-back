@@ -5,7 +5,6 @@ import com.ecommerce.fitgearback.dtos.admin.AdminResponse;
 import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
 import com.ecommerce.fitgearback.mappers.AdminMapper;
 import com.ecommerce.fitgearback.models.Admin;
-
 import com.ecommerce.fitgearback.models.Role;
 import com.ecommerce.fitgearback.repositories.AdminRepository;
 import com.ecommerce.fitgearback.repositories.RoleRepository;
@@ -13,16 +12,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 @Setter
 @Getter

@@ -1,27 +1,28 @@
 package com.ecommerce.fitgearback.services;
 
 import com.ecommerce.fitgearback.Configurations.JwtConfig;
+import com.ecommerce.fitgearback.dtos.login.JwtRequest;
 import com.ecommerce.fitgearback.dtos.login.JwtResponse;
-import com.ecommerce.fitgearback.dtos.login.LoginRequest;
-import com.ecommerce.fitgearback.dtos.login.LoginResponse;
 import com.ecommerce.fitgearback.mappers.AdminMapper;
 import com.ecommerce.fitgearback.mappers.CustomerMapper;
 import com.ecommerce.fitgearback.mappers.VendorMapper;
-import com.ecommerce.fitgearback.models.*;
+import com.ecommerce.fitgearback.models.Admin;
+import com.ecommerce.fitgearback.models.Customer;
+import com.ecommerce.fitgearback.models.JwtUser;
+import com.ecommerce.fitgearback.models.Vendor;
 import com.ecommerce.fitgearback.repositories.AdminRepository;
 import com.ecommerce.fitgearback.repositories.CustomerRepository;
-import com.ecommerce.fitgearback.repositories.UserRepository;
 import com.ecommerce.fitgearback.repositories.VendorRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,9 +30,9 @@ import java.util.List;
 @AllArgsConstructor
 @Service
 public class AuthService {
+
     private final AuthenticationManager authManager;
     private final JwtService jwtService;
-    private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
     private final AdminRepository adminRepository;
     private final VendorRepository vendorRepository;
@@ -39,110 +40,150 @@ public class AuthService {
     private final VendorMapper vendorMapper;
     private final AdminMapper adminMapper;
     private final JwtConfig config;
+    private final JwtUserLoader jwtUserLoader;
 
-    public ResponseEntity<JwtResponse> login(LoginRequest request, HttpServletResponse response) {
-        authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+    public JwtResponse login(@NotNull JwtRequest request, HttpServletResponse response) {
+        try {
+            authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+        } catch (BadCredentialsException e) {
+            throw new BadCredentialsException("Invalid email or password");
+        }
 
-        var user = userRepository.findByEmail(request.getEmail()).orElseThrow();
-        var accessToken = jwtService.generateAccessToken(user);
-        var refreshToken = jwtService.generateRefreshToken(user);
+        JwtUser user = findUserByEmail(request.getEmail());
+        String role = determineRole(user);
+        String accessToken = jwtService.generateAccessToken(user, role);
+        String refreshToken = jwtService.generateRefreshToken(user, role);
 
+        setRefreshTokenCookie(response, refreshToken);
+        List<String> roles = List.of(role);
+        String redirectUrl = getRedirectUrl(roles);
+        return new JwtResponse(accessToken, refreshToken, roles, redirectUrl, null);
+    }
+
+    public JwtResponse refresh(String refreshToken) {
+        if (!jwtService.validateToken(refreshToken)) {
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+
+        var claims = jwtService.parseToken(refreshToken);
+        if (claims == null || claims.get("userId") == null || claims.get("role") == null) {
+            throw new BadCredentialsException("Invalid token claims");
+        }
+
+        Long userId;
+        try {
+            userId = Long.valueOf(claims.get("userId", String.class));
+        } catch (NumberFormatException e) {
+            throw new BadCredentialsException("Invalid user ID in token");
+        }
+        String role = claims.get("role", String.class);
+
+        JwtUser user = jwtUserLoader.loadUserFromToken(refreshToken);
+        String accessToken = jwtService.generateAccessToken(user, role);
+        List<String> roles = List.of(role);
+        String redirectUrl = getRedirectUrl(roles);
+        return new JwtResponse(accessToken, null, roles, redirectUrl, null);
+    }
+
+    public Object getCurrentUserInfo() {
+        Long userId = getCurrentUserId();
+        String role = getCurrentUserRole();
+
+        return switch (role) {
+            case "CUSTOMER" -> customerRepository.findById(userId)
+                    .map(customerMapper::toResponse)
+                    .orElseThrow(() -> new UsernameNotFoundException("Customer not found with ID: " + userId));
+            case "ADMIN" -> adminRepository.findById(userId)
+                    .map(adminMapper::toResponse)
+                    .orElseThrow(() -> new UsernameNotFoundException("Admin not found with ID: " + userId));
+            case "VENDOR" -> vendorRepository.findById(userId)
+                    .map(vendorMapper::toResponse)
+                    .orElseThrow(() -> new UsernameNotFoundException("Vendor not found with ID: " + userId));
+            default -> throw new UsernameNotFoundException("Invalid role: " + role);
+        };
+    }
+
+    public Customer getCurrentCustomer() {
+        Long userId = getCurrentUserId();
+        String role = getCurrentUserRole();
+        if (!"CUSTOMER".equals(role)) {
+            throw new AccessDeniedException("User is not a customer");
+        }
+        return customerRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("Customer not found with ID: " + userId));
+    }
+
+    public Vendor getCurrentVendor() {
+        Long userId = getCurrentUserId();
+        String role = getCurrentUserRole();
+        if (!"VENDOR".equals(role)) {
+            throw new AccessDeniedException("User is not a vendor");
+        }
+        return vendorRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("Vendor not found with ID: " + userId));
+    }
+
+    public Admin getCurrentAdmin() {
+        Long userId = getCurrentUserId();
+        String role = getCurrentUserRole();
+        if (!"ADMIN".equals(role)) {
+            throw new AccessDeniedException("User is not an admin");
+        }
+        return adminRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("Admin not found with ID: " + userId));
+    }
+
+    private Long getCurrentUserId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof Long userId)) {
+            throw new UsernameNotFoundException("Unauthorized or invalid user principal");
+        }
+        return userId;
+    }
+
+    private String getCurrentUserRole() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getAuthorities().isEmpty()) {
+            throw new UsernameNotFoundException("No role found for user");
+        }
+        return auth.getAuthorities().stream()
+                .findFirst()
+                .map(authority -> authority.getAuthority().replace("ROLE_", ""))
+                .orElseThrow(() -> new UsernameNotFoundException("No role found for user"));
+    }
+
+    private JwtUser findUserByEmail(String email) {
+        return adminRepository.findByEmail(email)
+                .map(user -> (JwtUser) user)
+                .orElseGet(() -> vendorRepository.findByEmail(email)
+                        .map(user -> (JwtUser) user)
+                        .orElseGet(() -> customerRepository.findByEmail(email)
+                                .map(user -> (JwtUser) user)
+                                .orElseThrow(() -> new UsernameNotFoundException("User not found for email: " + email))));
+    }
+
+    private String determineRole(JwtUser user) {
+        if (user instanceof Admin) return "ADMIN";
+        if (user instanceof Vendor) return "VENDOR";
+        if (user instanceof Customer) return "CUSTOMER";
+        throw new IllegalStateException("Unknown user type");
+    }
+
+    private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         var cookie = new Cookie("refreshToken", refreshToken);
         cookie.setHttpOnly(true);
         cookie.setPath("/api/v1/auth/refresh");
         cookie.setMaxAge(config.getRefreshTokenExpiration());
-        cookie.setSecure(false);
+        cookie.setSecure(config.isSecureCookies());
         response.addCookie(cookie);
-
-        var roles = user.getRoles().stream().map(Role::getName).toList();
-        var redirectUrl = getRedirectUrl(roles);
-
-        return ResponseEntity.ok(new JwtResponse(accessToken, refreshToken, roles, redirectUrl));
     }
 
-    public ResponseEntity<JwtResponse> refresh(String refreshToken) {
-        if (!jwtService.validateToken(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        var userId = jwtService.getUserIdFromToken(refreshToken);
-        var user = userRepository.findById(userId).orElseThrow();
-
-        var accessToken = jwtService.generateAccessToken(user);
-        var roles = user.getRoles().stream().map(Role::getName).toList();
-        var redirectUrl = getRedirectUrl(roles);
-
-        return ResponseEntity.ok(new JwtResponse(accessToken, null, roles, redirectUrl));
-    }
-
-    public ResponseEntity<?> getCurrentUserInfo() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        var userId = (Long) auth.getPrincipal();
-
-        return userRepository.findById(userId)
-                .map(user -> {
-                    if (hasRole(user, "CUSTOMER")) {
-                        var customer = customerRepository.findById(userId).orElse(null);
-                        return ResponseEntity.ok(customerMapper.toResponse(customer));
-                    } else if (hasRole(user, "ADMIN")) {
-                        var admin = adminRepository.findById(userId).orElse(null);
-                        return ResponseEntity.ok(adminMapper.toResponse(admin));
-                    } else if (hasRole(user, "VENDOR")) {
-                        var vendor = vendorRepository.findById(userId).orElse(null);
-                        return ResponseEntity.ok(vendorMapper.toResponse(vendor));
-                    }
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-
-    public User getCurrentUser() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof Long userId)) {
-            throw new RuntimeException("Unauthorized or invalid user principal");
-        }
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    public Customer getCurrentCustomer() {
-        User user = getCurrentUser();
-        if (!hasRole(user, "CUSTOMER")) {
-            throw new RuntimeException("Current user is not a customer");
-        }
-        return customerRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
-    }
-
-    public Admin getCurrentAdmin() {
-        User user = getCurrentUser();
-        if (!hasRole(user, "ADMIN")) {
-            throw new RuntimeException("Current user is not an admin");
-        }
-        return adminRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("Admin not found"));
-    }
-
-    public Vendor getCurrentVendor() {
-        User user = getCurrentUser();
-        if (!hasRole(user, "VENDOR")) {
-            throw new RuntimeException("Current user is not a vendor");
-        }
-        return vendorRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("Vendor not found"));
-    }
-
-    private @NotNull String getRedirectUrl(@NotNull List<String> roles) {
+    private String getRedirectUrl(List<String> roles) {
         if (roles.contains("ADMIN")) return "/admin/dashboard";
         if (roles.contains("VENDOR")) return "/vendor/dashboard";
         if (roles.contains("CUSTOMER")) return "/customer/dashboard";
         return "/login";
-    }
-
-    private boolean hasRole(@NotNull User user, String roleName) {
-        return user.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase(roleName));
     }
 }

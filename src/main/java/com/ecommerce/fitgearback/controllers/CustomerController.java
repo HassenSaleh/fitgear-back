@@ -25,7 +25,6 @@ import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
 @PreAuthorize(value = "hasRole('CUSTOMER')")
-
 @Setter
 @Getter
 @AllArgsConstructor
@@ -59,7 +58,7 @@ public class CustomerController {
         return ResponseEntity.ok(customer);
     }
 
-    @PreAuthorize(value = "hasRole('CUSTOMER')")
+    @PreAuthorize("permitAll()")
     @PostMapping("/sign")
     public ResponseEntity<CustomerResponse> sign(@Valid @RequestBody CustomerRequest request) {
         CustomerResponse response = customerService.sign(request);
@@ -108,6 +107,7 @@ public class CustomerController {
     }
 
 
+    @PreAuthorize(value = "hasRole('CUSTOMER')||hasRole('VENDOR')")
     @GetMapping("/my-orders")
     public List<OrderResponse> getMyOrders() {
         Long userId = getCurrentUserId();
@@ -117,7 +117,7 @@ public class CustomerController {
         }
 
         if (hasRole("VENDOR")) {
-            return orderService.getOrdersByVendorId(userId); // via products -> vendor
+            return orderService.getOrdersByVendorId(userId);
         }
 
         throw new AccessDeniedException("Not authorized");
@@ -134,7 +134,7 @@ public class CustomerController {
     private boolean hasRole(String role) {
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(auth -> auth.equals( role));
+                .anyMatch(auth -> auth.equals( "ROLE_" + role));
     }
 
 }

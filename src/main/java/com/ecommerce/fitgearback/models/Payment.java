@@ -3,38 +3,43 @@ package com.ecommerce.fitgearback.models;
 import com.ecommerce.fitgearback.enums.PaymentMethod;
 import com.ecommerce.fitgearback.enums.PaymentStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.hibernate.annotations.UuidGenerator;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "payments")
-@Setter
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Payment {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
+    private Order order;
 
     private BigDecimal amount;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private PaymentMethod method;
+    private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
-    private LocalDateTime paidAt;
+    private LocalDateTime paymentDate;
 
-    @OneToOne
-    @JoinColumn(name = "order_id", unique = true)
-    private Order order;
+    public Payment(Order order, BigDecimal amount, PaymentMethod paymentMethod, PaymentStatus status) {
+        this.order = order;
+        this.amount = amount;
+        this.paymentMethod = paymentMethod;
+        this.status = status;
+        this.paymentDate = LocalDateTime.now();
+    }
 }

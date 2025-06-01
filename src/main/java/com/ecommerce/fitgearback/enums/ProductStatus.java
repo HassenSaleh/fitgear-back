@@ -1,4 +1,4 @@
-package com.ecommerce.fitgearback.dtos.product;
+package com.ecommerce.fitgearback.enums;
 
 public enum ProductStatus {
     ACTIVE,

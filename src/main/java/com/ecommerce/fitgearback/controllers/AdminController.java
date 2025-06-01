@@ -3,7 +3,6 @@ package com.ecommerce.fitgearback.controllers;
 import com.ecommerce.fitgearback.dtos.admin.AdminRequest;
 import com.ecommerce.fitgearback.dtos.admin.AdminResponse;
 import com.ecommerce.fitgearback.services.AdminService;
-import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

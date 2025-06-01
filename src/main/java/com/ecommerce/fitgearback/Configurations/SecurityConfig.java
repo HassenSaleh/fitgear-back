@@ -1,6 +1,7 @@
 package com.ecommerce.fitgearback.Configurations;
 
 import com.ecommerce.fitgearback.filters.JwtAuthenticationFilter;
+import com.ecommerce.fitgearback.services.UserDetailService;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,10 +16,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -27,44 +26,43 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @AllArgsConstructor
 @Configuration
 @EnableWebSecurity
-//@EnableMethodSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
-    private final UserDetailsService userService;
+    private final UserDetailService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthenticationFilter authenticationFilter;
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(c ->
-                        c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                        .authorizeHttpRequests(c -> c
+                .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(c -> c
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/admin/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/product/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/category/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui.html", "/webjars/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/v1/cart/**").hasRole("CUSTOMER")
+                        .requestMatchers("/api/v1/orders/**").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/product/**").hasRole("VENDOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/product/**").hasRole("VENDOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/product/**").hasRole("VENDOR")
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/customer/**").permitAll()
                         .requestMatchers("/api/v1/vendor/**").permitAll()
-                        .requestMatchers("/api/v1/product/**").permitAll()
-                        .requestMatchers("/api/v1/category/**").permitAll()
-                        .requestMatchers( "/api/v1/user/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui.html", "/webjars/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v3/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/swagger-ui/index.html").permitAll()
-                        .requestMatchers("/api/v1/cart/**").permitAll()
+                        .requestMatchers("/api/v1/user/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(
-                        c-> c.authenticationEntryPoint(
-                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))).build();
+                .exceptionHandling(c -> c.authenticationEntryPoint(
+                        new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .build();
     }
 
-
-
     @Bean
-    public AuthenticationProvider authenticationProvider() throws Exception {
+    public AuthenticationProvider authenticationProvider() {
         var provider = new DaoAuthenticationProvider();
         provider.setPasswordEncoder(passwordEncoder);
         provider.setUserDetailsService(userService);
@@ -75,5 +73,4 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
 }

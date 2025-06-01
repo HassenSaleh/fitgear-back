@@ -32,15 +32,5 @@ public class OrderController {
         return orderService.getOrder(orderId);
     }
 
-    @ExceptionHandler(OrderNotFoundException.class)
-    public ResponseEntity<Void> handleOrderNotFound() {
-        return ResponseEntity.notFound().build();
-    }
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorDto> handleAccessDenied(@NotNull Exception ex) {
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(new ErrorDto(ex.getMessage()));
-    }
 }

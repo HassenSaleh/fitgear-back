@@ -1,40 +1,38 @@
 package com.ecommerce.fitgearback.models;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.UuidGenerator;
 
-import java.math.BigDecimal;
-import java.util.UUID;
-
-import static jakarta.persistence.GenerationType.*;
 @Entity
 @Table(name = "cart_items")
-@Setter
 @Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class CartItem {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "quantity", nullable = false)
-    @NotNull
-    @Positive
-    private Integer quantity;
-    @ManyToOne
-    @JoinColumn(name = "cart_id")
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
-    @ManyToOne
-    @JoinColumn(name = "product_id")
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    public BigDecimal getTotalPrice() {
-        return product.getPrice().multiply(BigDecimal.valueOf(quantity));
+    @Column(nullable = false)
+    private int quantity;
+
+    public CartItem(Cart cart, Product product, int quantity) {
+        if (product == null || quantity <= 0) {
+            throw new IllegalArgumentException("Invalid product or quantity");
+        }
+        this.cart = cart;
+        this.product = product;
+        this.quantity = quantity;
     }
 }

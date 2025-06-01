@@ -1,82 +1,75 @@
 package com.ecommerce.fitgearback.services;
 
 import com.ecommerce.fitgearback.Configurations.JwtConfig;
-import com.ecommerce.fitgearback.models.Jwt;
-import com.ecommerce.fitgearback.models.User;
+import com.ecommerce.fitgearback.models.JwtUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.AllArgsConstructor;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @AllArgsConstructor
 @Service
 public class JwtService {
     private final JwtConfig config;
-    public String generateAccessToken(User user) {
-        return generateToken(user, config.getAccessTokenExpiration());
-    }
-    public String generateRefreshToken(User user){
-        return generateToken(user, config.getRefreshTokenExpiration());
-    }
 
-    public List<String> getRolesFromToken(String token) {
-        Claims claims = getClaims(token);
-        return claims.get("roles", List.class);
-    }
-
-    private @Nullable String generateToken(@NotNull User user, long tokenExpiration) {
-        if (user.getRoles().isEmpty()) {
-            return null;
-        }
+    public String generateAccessToken(JwtUser user, String role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", user.getRoleNames());
+        claims.put("role", role);
         claims.put("userId", user.getId());
+        claims.put("email", user.getEmail());
+        claims.put("name", user.getFirstName() + " " + user.getLastName());
+        return createToken(claims, user.getEmail(), config.getAccessTokenExpiration());
+    }
+
+    public String generateRefreshToken(JwtUser user, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
+        claims.put("userId", user.getId());
+        claims.put("email", user.getEmail());
+        return createToken(claims, user.getEmail(), config.getRefreshTokenExpiration());
+    }
+
+    private String createToken(Map<String, Object> claims, String subject, long expiration) {
         return Jwts.builder()
-                .setSubject(user.getId().toString())
-                .claim("email", user.getEmail())
-                .claim("role", user.getRoles().iterator().next().getName())
-                .claim("name", user.getFirstName() + " " + user.getLastName())
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * tokenExpiration))
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000))
                 .signWith(config.getSecretKey())
                 .compact();
     }
 
-    public boolean validateToken(String token){
+    public boolean validateToken(String token) {
         try {
-            var claims = getClaims(token);
-            return !claims.getExpiration().after(new Date());
-        } catch (JwtException ex){
+            Jwts.parser()
+                    .setSigningKey(config.getSecretKey())
+                    .build()
+                    .parseClaimsJws(token);
             return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
         }
     }
 
-    private Claims getClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(config.getSecretKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-
-    public Jwt parseToken(String token) {
+    public Claims parseToken(String token) {
         try {
-            var claims = getClaims(token);
-            return new Jwt(claims, config.getSecretKey());
+            return Jwts.parser()
+                    .setSigningKey(config.getSecretKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
         } catch (JwtException e) {
             return null;
         }
     }
 
-    public Long getUserIdFromToken(String token){
-        return Long.valueOf(getClaims(token).getSubject());
+    public String getEmailFromToken(String token) {
+        Claims claims = parseToken(token);
+        return claims != null ? claims.getSubject() : null;
     }
 }

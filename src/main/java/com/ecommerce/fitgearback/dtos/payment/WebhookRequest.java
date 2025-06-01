@@ -2,7 +2,6 @@ package com.ecommerce.fitgearback.dtos.payment;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
 import java.util.Map;
 
 @AllArgsConstructor

@@ -11,7 +11,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminResponse extends UserResponse {
-//    private String department;
     private String token;
     private String role;
     private String redirectUrl;

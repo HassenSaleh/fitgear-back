@@ -16,11 +16,19 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Role {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(nullable = false, unique = true)
     private String name;  // e.g. "ADMIN", "CUSTOMER", "VENDOR"
     @ManyToMany(mappedBy = "roles")
     @JsonIgnore
-    private Set<User> users;
+    private Set<Customer> customers;
+
+    @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
+    private Set<Admin> admins;
+
+    @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
+    private Set<Vendor> vendors;
 }

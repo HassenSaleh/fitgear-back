@@ -6,10 +6,8 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -25,8 +23,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "LOWER(p.name) LIKE(CONCAT('%',':keyword','%'))"
     )
     List<Product> searchAllBy(String keyword);
-
-
     List<Product> findAllByOrderByPriceAsc();
     List<Product> findAllByOrderByPriceDesc();
     List<Product> findAllByOrderByStockAsc();
@@ -34,7 +30,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByOrderByNameAsc();
     List<Product> findAllByOrderByNameDesc();
     Long countByVendorId(Long vendor_id);
-    Optional<Product> getProductByVendorId(Long id);
-
     @NotNull Optional<Product> findById(@NotNull Long productId);
+    List<Product> findByVendorId(Long vendorId);
 }

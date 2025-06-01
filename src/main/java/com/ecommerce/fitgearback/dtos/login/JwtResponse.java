@@ -4,17 +4,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.util.List;
 
 @Setter
 @Getter
 @AllArgsConstructor
 public class JwtResponse {
-    private String token;
+    private String accessToken;
     @JsonIgnore
     private String refreshToken;
     @JsonIgnore
     private List<String> roles;
     private String redirectUrl;
+    private String errorMessage;
 }

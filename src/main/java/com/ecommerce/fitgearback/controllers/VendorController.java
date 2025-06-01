@@ -107,8 +107,8 @@ public class VendorController {
 
     @PreAuthorize(value = "hasRole('VENDOR')")
     @DeleteMapping("/product/{id}")
-    public ResponseEntity<String> deleteProduct(@PathVariable Long id, @RequestParam Long vendorId) {
-        productService.deleteProduct(id, vendorId);
+    public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
         return ResponseEntity.ok("Product deleted successfully");
     }
 
