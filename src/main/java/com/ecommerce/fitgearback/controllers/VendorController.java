@@ -1,12 +1,19 @@
 package com.ecommerce.fitgearback.controllers;
 
+import com.ecommerce.fitgearback.dtos.customer.CustomerRequest;
+import com.ecommerce.fitgearback.dtos.customer.CustomerResponse;
+import com.ecommerce.fitgearback.dtos.login.JwtRequest;
+import com.ecommerce.fitgearback.dtos.login.JwtResponse;
 import com.ecommerce.fitgearback.dtos.product.ProductRequest;
 import com.ecommerce.fitgearback.dtos.product.ProductResponse;
+import com.ecommerce.fitgearback.dtos.signup.SignUpResponse;
 import com.ecommerce.fitgearback.dtos.vendor.*;
 import com.ecommerce.fitgearback.models.Product;
+import com.ecommerce.fitgearback.services.AuthService;
 import com.ecommerce.fitgearback.services.ProductService;
 import com.ecommerce.fitgearback.services.VendorService;
 import jakarta.annotation.security.PermitAll;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,14 +35,15 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1/vendor")
+@RequestMapping("/api/v1/vendors")
 
 public class VendorController {
     private final VendorService vendorService;
     private final ProductService productService;
+    private final AuthService authService;
 
     @PreAuthorize(value = "hasRole('VENDOR')")
-    @GetMapping("/all")
+    @GetMapping("/")
     public ResponseEntity<Iterable<VendorResponse>> getAllVendors() {
         Iterable<VendorResponse> vendors = vendorService.getAllVendors();
         if(vendors.iterator().hasNext()){
@@ -62,20 +70,22 @@ public class VendorController {
         return ResponseEntity.notFound().build();
     }
 
-    @PreAuthorize(value = "hasRole('VENDOR')")
+    @PreAuthorize("permitAll()")
     @PostMapping("/sign")
-    public ResponseEntity<VendorResponse> sign(@Valid @RequestBody VendorRequest request) {
-        VendorResponse response = vendorService.sign(request);
-        if (response != null) {
+    public ResponseEntity<SignUpResponse> sign(@Valid @RequestBody VendorRequest request, HttpServletResponse response) {
+        VendorResponse vendorResponse = vendorService.sign(request);
+        if (vendorResponse != null) {
+            var jwtResponse = authService.login(new JwtRequest(vendorResponse.getEmail(), request.getPassword()), response);
+            SignUpResponse signUpResponse = new SignUpResponse(jwtResponse.getAccessToken(), "/auth/login");
+
             URI location = ServletUriComponentsBuilder
                     .fromCurrentRequest()
-                    .path("/users/{id}")
-                    .buildAndExpand(response.getId())
+                    .path("/{id}")
+                    .buildAndExpand(vendorResponse.getId())
                     .toUri();
-            return ResponseEntity.created(location).body(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.created(location).body(signUpResponse);
         }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @PreAuthorize(value = "hasRole('VENDOR')")
@@ -100,7 +110,7 @@ public class VendorController {
     public ResponseEntity<ProductResponse> addProduct(
             @Valid @RequestPart("product") ProductRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image) {
-        ProductResponse createdProduct = productService.createProduct(request, image);
+        ProductResponse createdProduct = productService.createProduct(request);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
 

@@ -12,6 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 public class CartResponse {
     private Long id;
-    private Long customerId;
+    private Long customerId;//
     private List<CartItemResponse> items;
 }

@@ -39,6 +39,8 @@ public class AdminService {
         return adminMapper.toResponse(saved);
     }
 
+
+
     public AdminResponse updateAdmin(Long id, @NotNull AdminRequest dto) {
         Admin existing = adminRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + id));

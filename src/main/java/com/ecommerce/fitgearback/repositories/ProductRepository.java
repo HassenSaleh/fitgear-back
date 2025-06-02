@@ -1,5 +1,6 @@
 package com.ecommerce.fitgearback.repositories;
 
+import com.ecommerce.fitgearback.dtos.product.ProductResponse;
 import com.ecommerce.fitgearback.models.Product;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -32,4 +33,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Long countByVendorId(Long vendor_id);
     @NotNull Optional<Product> findById(@NotNull Long productId);
     List<Product> findByVendorId(Long vendorId);
+
+    List<Product> getAllProducts();
+
+    //List<ProductResponse> getAllProducts();
 }

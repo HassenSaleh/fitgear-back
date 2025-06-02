@@ -51,6 +51,8 @@ public class AuthService {
             throw new BadCredentialsException("Invalid email or password");
         }
 
+        var token = jwtService.generateToken(request.getEmail());
+
         JwtUser user = findUserByEmail(request.getEmail());
         String role = determineRole(user);
         String accessToken = jwtService.generateAccessToken(user, role);
@@ -72,9 +74,9 @@ public class AuthService {
             throw new BadCredentialsException("Invalid token claims");
         }
 
-        Long userId;
+        long userId;
         try {
-            userId = Long.valueOf(claims.get("userId", String.class));
+            userId = Long.parseLong(claims.get("userId", String.class));
         } catch (NumberFormatException e) {
             throw new BadCredentialsException("Invalid user ID in token");
         }

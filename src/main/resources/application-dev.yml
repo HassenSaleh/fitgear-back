@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/fitGearBack?createDatabaseIfNotExist=true
+    username: root
+    password: salmen25
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  jwt:
+    secret: ${JWT_SECRET}
+    accessTokenExpiration: 300000       # 5 minutes
+    refreshTokenExpiration: 6048000     # ~70 days
+chapa:
+  secret-key: ${SECRET_KEY}
+  public-key: ${PUBLIC_KEY}
+  api-url: https://api.chapa.co/v1

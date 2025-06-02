@@ -2,9 +2,11 @@ package com.ecommerce.fitgearback.services;
 
 import com.ecommerce.fitgearback.dtos.product.ProductRequest;
 import com.ecommerce.fitgearback.dtos.product.ProductResponse;
+import com.ecommerce.fitgearback.enums.ProductStatus;
 import com.ecommerce.fitgearback.exceptions.ImageProcessingException;
 import com.ecommerce.fitgearback.exceptions.ProductNotFoundException;
 import com.ecommerce.fitgearback.mappers.ProductMapper;
+import com.ecommerce.fitgearback.models.Category;
 import com.ecommerce.fitgearback.models.Product;
 import com.ecommerce.fitgearback.models.Vendor;
 import com.ecommerce.fitgearback.repositories.CategoryRepository;
@@ -16,12 +18,13 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,11 +38,26 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
     private final AuthService authService;
+    private static final String UPLOAD_DIR = "Uploads/";
 
-    public List<ProductResponse> getAllProducts(Long categoryId) {
+    public List<ProductResponse> getAllProductsByCategory(Long categoryId) {
         List<Product> products = categoryId != null
                 ? productRepository.findByCategoryId(categoryId)
                 : productRepository.findAllWithCategory();
+        return productMapper.toProductResponseList(products);
+    }
+
+    public List<ProductResponse> getAllProductsByVendor(Long vendorId) {
+        List<Product> products = vendorId != null
+                ? productRepository.findByVendorId(vendorId)
+                : productRepository.findAllWithCategory();
+        return productMapper.toProductResponseList(products);
+    }
+    public List<ProductResponse> getAllProducts(){
+        List<Product> products = productRepository.getAllProducts().stream().toList();
+        if(products.isEmpty()) {
+            return null;
+        }
         return productMapper.toProductResponseList(products);
     }
 
@@ -54,36 +72,43 @@ public class ProductService {
         return productMapper.toProductResponseList(products);
     }
 
-    @Transactional
-    public ProductResponse createProduct(ProductRequest productRequest, MultipartFile image) {
+    public ProductResponse createProduct(ProductRequest request) {
         Vendor vendor = authService.getCurrentVendor();
-        var category = categoryRepository.findById(productRequest.getCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid category ID: " + productRequest.getCategoryId()));
+        if (vendor == null) {
+            throw new AccessDeniedException("Authenticated user is not a vendor");
+        }
 
-        validateProductRequest(productRequest);
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + request.getCategoryId()));
 
-        var product = productMapper.toProduct(productRequest);
+        Product product = new Product();
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
+        product.setStock(request.getStock());
+        product.setBrand(request.getBrand());
         product.setCategory(category);
-        product.setVendor(vendor);
+        product.setVendor(vendor); // Set vendor from authenticated user
+        product.setActive(request.getStatus() != null ? request.getStatus() : ProductStatus.ACTIVE);
+        product.setCreatedAt(LocalDateTime.now());
 
-        if (image != null && !image.isEmpty()) {
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
             try {
-                String imageName = saveImage(image);
-                product.setImageName(imageName);
-                product.setImageType(image.getContentType());
+                String fileName = UUID.randomUUID() + "_" + request.getImage().getOriginalFilename();
+                Path filePath = Paths.get(UPLOAD_DIR, fileName);
+                Files.createDirectories(filePath.getParent());
+                request.getImage().transferTo(filePath);
+                product.setImageName(fileName);
+                product.setImageType(request.getImage().getContentType());
             } catch (IOException e) {
-                logger.error("Failed to store image for product: {}", productRequest.getName(), e);
-                throw new ImageProcessingException("Failed to store image", e);
+                throw new RuntimeException("Failed to upload image: " + e.getMessage());
             }
         }
-
-        productRepository.save(product);
-        ProductResponse response = productMapper.toProductResponse(product);
-        if (product.getImageName() != null) {
-            response.setImageUrl("/Uploads/" + product.getImageName());
-        }
-        return response;
+        Product savedProduct = productRepository.save(product);
+        return productMapper.toProductResponse(savedProduct);
     }
+
+
 
     @Transactional
     public ProductResponse updateProduct(Long id, ProductRequest productRequest, MultipartFile image) {
@@ -172,7 +197,7 @@ public class ProductService {
         if (!List.of("jpg", "jpeg", "png", "gif").contains(extension.toLowerCase())) {
             throw new IllegalArgumentException("Invalid image format: " + extension);
         }
-        if (image.getSize() > 5 * 1024 * 1024) { // 5MB limit
+        if (image.getSize() > 5 * 1024 * 8 * 1024) { // 5MB limit
             throw new IllegalArgumentException("Image size exceeds 5MB");
         }
 

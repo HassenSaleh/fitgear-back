@@ -18,11 +18,11 @@ import java.util.List;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1/order")
+@RequestMapping("/api/v1/orders")
 public class OrderController {
     private final OrderService orderService;
 
-    @GetMapping("/all")
+    @GetMapping("/")
     public List<OrderResponse> getAllOrders() {
         return orderService.getAllOrders();
     }

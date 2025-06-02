@@ -18,9 +18,11 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -56,9 +58,30 @@ public class OrderService {
     public OrderResponse placeOrder(@NotNull PlaceOrderRequest request) {
         Customer customer = authService.getCurrentCustomer();
 
-        Map<Long, Integer> productQuantities = request.getProductQuantities();
-        if (productQuantities == null || productQuantities.isEmpty()) {
+        List<Map<Long, Integer>> productQuantitiesList = request.getProductQuantities();
+        if (productQuantitiesList == null || productQuantitiesList.isEmpty()) {
             throw new IllegalArgumentException("No products specified in the order.");
+        }
+
+        Map<Long, Integer> productQuantities = productQuantitiesList.stream()
+                .flatMap(map -> map.entrySet().stream())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        Integer::sum,
+                        HashMap::new
+                ));
+
+        if (productQuantities.isEmpty()) {
+            throw new IllegalArgumentException("No valid products specified in the order.");
+        }
+
+        List<Long> providedProductIds = request.getProductIds();
+        if (providedProductIds != null && !providedProductIds.isEmpty()) {
+            Set<Long> quantityProductIds = productQuantities.keySet();
+            if (!quantityProductIds.containsAll(providedProductIds)) {
+                throw new IllegalArgumentException("Provided product IDs do not match quantities.");
+            }
         }
 
         Set<Long> productIds = productQuantities.keySet();
@@ -72,6 +95,18 @@ public class OrderService {
                 throw new IllegalArgumentException("Insufficient stock for product ID: " + product.getId());
             }
         });
+
+        products.forEach(product -> {
+            Integer quantity = productQuantities.get(product.getId());
+            if (quantity == null || quantity <= 0) {
+                throw new IllegalArgumentException("Invalid quantity for product ID: " + product.getId());
+            }
+            if (product.getStock() < quantity) {
+                throw new IllegalArgumentException("Insufficient stock for product ID: " + product.getId());
+            }
+            product.setStock(product.getStock() - quantity);
+        });
+
 
         Order order = new Order();
         order.setCustomer(customer);
@@ -94,6 +129,7 @@ public class OrderService {
         order.setTotalAmount(orderItems.stream()
                 .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
+        productRepository.saveAll(products);
         Order savedOrder = orderRepository.save(order);
         return orderMapper.toOrderResponse(savedOrder);
     }

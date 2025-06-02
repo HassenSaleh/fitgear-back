@@ -16,16 +16,16 @@ import java.util.List;
 @AllArgsConstructor
 @Data
 @RestController
-@RequestMapping("/api/v1/category")
+@RequestMapping("/api/v1/categories")
 public class CategoryController {
    private final CategoryService categoryService;
 
-   @PostMapping("/add")
+   @PostMapping("/")
    public ResponseEntity<CategoryResponse> createCategory(@RequestBody CategoryRequest dto) {
       return ResponseEntity.ok(categoryService.createCategory(dto));
    }
 
-   @GetMapping("/all")
+   @GetMapping("/")
    public ResponseEntity<List<CategoryResponse>> getAllCategories() {
       return ResponseEntity.ok(categoryService.getAllCategories());
    }

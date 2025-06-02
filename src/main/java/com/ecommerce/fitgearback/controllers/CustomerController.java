@@ -1,11 +1,18 @@
 package com.ecommerce.fitgearback.controllers;
 
 import com.ecommerce.fitgearback.dtos.customer.*;
+import com.ecommerce.fitgearback.dtos.login.JwtRequest;
+import com.ecommerce.fitgearback.dtos.login.JwtResponse;
 import com.ecommerce.fitgearback.dtos.order.OrderResponse;
+import com.ecommerce.fitgearback.dtos.product.ProductResponse;
+import com.ecommerce.fitgearback.dtos.signup.SignUpResponse;
 import com.ecommerce.fitgearback.mappers.CustomerMapper;
+import com.ecommerce.fitgearback.services.AuthService;
 import com.ecommerce.fitgearback.services.CustomerService;
 import com.ecommerce.fitgearback.services.OrderService;
+import com.ecommerce.fitgearback.services.ProductService;
 import jakarta.annotation.security.PermitAll;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,17 +36,21 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1/customer")
+@RequestMapping("/api/v1/customers")
 
 public class CustomerController {
     private final CustomerService customerService;
     private final CustomerMapper customerMapper;
     private final OrderService orderService;
+    private final AuthService authService;
+    private final ProductService productService;
 
     @PreAuthorize(value = "hasRole('CUSTOMER')")
-    @GetMapping("/all")
+    @GetMapping("/")
     public ResponseEntity<List<CustomerResponse>> getAll() {
         List<CustomerResponse> customers = customerService.getAllCustomers();
+
+        List<ProductResponse> products = productService.getAllProducts();
 
         if (customers.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -60,18 +71,21 @@ public class CustomerController {
 
     @PreAuthorize("permitAll()")
     @PostMapping("/sign")
-    public ResponseEntity<CustomerResponse> sign(@Valid @RequestBody CustomerRequest request) {
-        CustomerResponse response = customerService.sign(request);
-        if (response != null) {
-            URI location = ServletUriComponentsBuilder
-                    .fromCurrentRequest()
-                    .path("/{id}")
-                    .buildAndExpand(response.getId())
-                    .toUri();
-            return ResponseEntity.created(location).body(response);
-        } else {
+    public ResponseEntity<SignUpResponse> sign(@Valid @RequestBody CustomerRequest request, HttpServletResponse response) {
+        CustomerResponse customerResponse = customerService.sign(request);
+        if (customerResponse == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
+
+        JwtResponse jwtResponse = authService.login(new JwtRequest(customerResponse.getEmail(), request.getPassword()), response);
+        SignUpResponse signUpResponse = new SignUpResponse(jwtResponse.getAccessToken(), "/auth/login");
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(customerResponse.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(signUpResponse);
     }
 
     @PreAuthorize(value = "hasRole('CUSTOMER')")

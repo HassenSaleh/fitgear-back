@@ -14,20 +14,31 @@ import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
 
-    @Mapping(target = "imageUrl", ignore = true)
+    @Mapping(target = "imageUrl", expression = "java(product.getImageName() != null ? \"/api/v1/products/\" + product.getId() + \"/image\" : null)")
     @Mapping(target = "vendorId", source = "vendor.id")
     @Mapping(target = "categoryId", source = "category.id")
+    @Mapping(target = "categoryName", source = "category.name")
     ProductResponse toProductResponse(Product product);
 
     List<ProductResponse> toProductResponseList(List<Product> products);
 
     @Mapping(target = "vendor", ignore = true)
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "imageName", ignore = true)
+    @Mapping(target = "imageType", ignore = true)
+    @Mapping(target = "active", source = "status")
     Product toProduct(ProductRequest productRequest);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "vendor", ignore = true)
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "imageName", ignore = true)
+    @Mapping(target = "imageType", ignore = true)
+    @Mapping(target = "active", source = "status")
     void update(ProductRequest productRequest, @MappingTarget Product product);
 
 }

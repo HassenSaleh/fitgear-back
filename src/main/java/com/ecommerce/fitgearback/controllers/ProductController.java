@@ -23,20 +23,22 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1/product")
+@RequestMapping("/api/v1/products")
 public class ProductController {
 
     private final ProductService productService;
 
-    @GetMapping("/all")
-    public ResponseEntity<List<ProductResponse>> getAllProducts(@RequestParam(required = false) Long categoryId) {
-        List<ProductResponse> products = productService.getAllProducts(categoryId);
+    @GetMapping("/")
+    public ResponseEntity<List<ProductResponse>> getAllProductsByCategory(@RequestParam(required = false) Long categoryId) {
+        List<ProductResponse> products = productService.getAllProductsByCategory(categoryId);
         return ResponseEntity.ok(products);
     }
 
+
+
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<ProductResponse>> getProductsByCategory(@PathVariable Long categoryId) {
-        List<ProductResponse> products = productService.getAllProducts(categoryId);
+        List<ProductResponse> products = productService.getAllProductsByCategory(categoryId);
         return ResponseEntity.ok(products);
     }
 
@@ -65,15 +67,21 @@ public class ProductController {
     }
 
     @PreAuthorize("hasRole('VENDOR')")
-    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductResponse> createProduct(
-            @Valid @RequestPart("product") ProductRequest productRequest,
-            @RequestPart(value = "image", required = false) MultipartFile image,
+            @ModelAttribute ProductRequest productRequest,
             UriComponentsBuilder uriBuilder) {
-        ProductResponse createdProduct = productService.createProduct(productRequest, image);
-        var uri = uriBuilder.path("/api/v1/product/{id}").buildAndExpand(createdProduct.getId()).toUri();
+
+        ProductResponse createdProduct = productService.createProduct(productRequest);
+
+        var uri = uriBuilder
+                .path("/api/v1/product/{id}")
+                .buildAndExpand(createdProduct.getId())
+                .toUri();
+
         return ResponseEntity.created(uri).body(createdProduct);
     }
+
 
     @PreAuthorize("hasRole('VENDOR')")
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

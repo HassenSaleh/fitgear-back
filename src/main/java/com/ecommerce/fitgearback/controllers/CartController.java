@@ -24,7 +24,7 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1/cart")
+@RequestMapping("/api/v1/carts")
 
 public class CartController {
 
@@ -77,7 +77,7 @@ public class CartController {
         return ResponseEntity.ok(items);
     }
 
-    @PostMapping("/api/v1/orders/from-cart")
+    @PostMapping("/orders/from-cart")
     public ResponseEntity<OrderResponse> placeOrderFromCart(@Valid @RequestBody PlaceOrderRequest request) {
         OrderResponse orderDto = orderService.placeOrderFromCart(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(orderDto);

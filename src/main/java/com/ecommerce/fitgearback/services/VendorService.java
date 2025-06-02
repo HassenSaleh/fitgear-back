@@ -48,7 +48,6 @@ public class VendorService {
         Vendor savedVendor = vendorRepository.save(vendor);
         return vendorMapper.toResponse(savedVendor);
     }
-
     public List<VendorResponse> getAllVendors() {
         return vendorRepository.findAll()
                 .stream()
