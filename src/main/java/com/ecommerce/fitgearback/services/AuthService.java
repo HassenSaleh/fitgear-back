@@ -176,16 +176,16 @@ public class AuthService {
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         var cookie = new Cookie("refreshToken", refreshToken);
         cookie.setHttpOnly(true);
-        cookie.setPath("/api/v1/auth/refresh");
+        cookie.setPath("/api/v1/auths/refresh");
         cookie.setMaxAge(config.getRefreshTokenExpiration());
         cookie.setSecure(config.isSecureCookies());
         response.addCookie(cookie);
     }
 
     private String getRedirectUrl(List<String> roles) {
-        if (roles.contains("ADMIN")) return "/admin/dashboard";
-        if (roles.contains("VENDOR")) return "/vendor/dashboard";
-        if (roles.contains("CUSTOMER")) return "/customer/dashboard";
+        if (roles.contains("ADMIN")) return "/admins/dashboard";
+        if (roles.contains("VENDOR")) return "/vendors/dashboard";
+        if (roles.contains("CUSTOMER")) return "/customers/dashboard";
         return "/login";
     }
 }

@@ -34,7 +34,7 @@ public class CartController {
     @PostMapping
     public ResponseEntity<CartResponse> createOrGetCart(UriComponentsBuilder uriBuilder) {
         CartResponse cartDto = cartService.createOrGetCart();
-        var uri = uriBuilder.path("/api/v1/cart").build().toUri();
+        var uri = uriBuilder.path("/api/v1/carts").build().toUri();
         return ResponseEntity.created(uri).body(cartDto);
     }
 
