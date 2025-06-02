@@ -14,6 +14,10 @@ import com.ecommerce.fitgearback.repositories.ProductRepository;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,7 +58,7 @@ public class ProductService {
         return productMapper.toProductResponseList(products);
     }
     public List<ProductResponse> getAllProducts(){
-        List<Product> products = productRepository.getAllProducts().stream().toList();
+        List<Product> products = productRepository.findAllWithCategory();
         if(products.isEmpty()) {
             return null;
         }
@@ -67,9 +71,8 @@ public class ProductService {
         return productMapper.toProductResponse(product);
     }
 
-    public List<ProductResponse> searchProduct(String search) {
-        List<Product> products = productRepository.searchAllBy(search);
-        return productMapper.toProductResponseList(products);
+    public List<Product> searchProducts(String keyword) {
+        return productRepository.searchAllBy(keyword);
     }
 
     public ProductResponse createProduct(ProductRequest request) {

@@ -47,15 +47,15 @@ public class CustomerController {
 
     @PreAuthorize(value = "hasRole('CUSTOMER')")
     @GetMapping("/")
-    public ResponseEntity<List<CustomerResponse>> getAll() {
+    public ResponseEntity<List<ProductResponse>> getAll() {
         List<CustomerResponse> customers = customerService.getAllCustomers();
 
         List<ProductResponse> products = productService.getAllProducts();
 
-        if (customers.isEmpty()) {
+        if (products.isEmpty()) {
             return ResponseEntity.notFound().build();
         } else {
-            return ResponseEntity.ok(customers);
+            return ResponseEntity.ok(products);
         }
     }
 

@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -48,10 +49,19 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
-    @GetMapping("/search/{search}")
-    public ResponseEntity<List<ProductResponse>> searchProduct(@PathVariable String search) {
-        List<ProductResponse> products = productService.searchProduct(search);
+    @GetMapping("/category/vendor/{vendorId}")
+    public ResponseEntity<List<ProductResponse>> getProductByVendorId(@PathVariable Long vendorId) {
+        List<ProductResponse> products = productService.getAllProductsByVendor(vendorId);
         return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Product>> searchProducts(
+            @RequestParam String keyword){
+        if(keyword.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(productService.searchProducts(keyword));
     }
 
     @GetMapping("/{id}/image")
