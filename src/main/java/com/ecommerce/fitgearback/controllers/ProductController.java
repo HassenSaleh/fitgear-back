@@ -20,6 +20,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
 
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @AllArgsConstructor
@@ -56,12 +57,13 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Product>> searchProducts(
+    public ResponseEntity<List<ProductResponse>> searchProducts(
             @RequestParam String keyword){
-        if(keyword.isEmpty()){
+        var response = productService.searchProducts(keyword);
+        if(response.isEmpty()){
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(productService.searchProducts(keyword));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}/image")
@@ -110,9 +112,16 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
+    private static final Set<String> VALID_SORT_FIELDS = Set.of(
+            "price_asc", "price_desc", "stock_asc", "stock_desc", "name_asc", "name_desc"
+    );
+
     @GetMapping("/sorted")
     public ResponseEntity<List<ProductResponse>> getSortedProducts(
             @RequestParam(defaultValue = "") String sortBy) {
+        if (!sortBy.isBlank() && !VALID_SORT_FIELDS.contains(sortBy.toLowerCase())) {
+            throw new IllegalArgumentException("Invalid sort field: " + sortBy);
+        }
         List<ProductResponse> sorted = productService.getAllSorted(sortBy);
         return ResponseEntity.ok(sorted);
     }

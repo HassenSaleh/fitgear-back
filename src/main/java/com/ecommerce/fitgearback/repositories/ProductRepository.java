@@ -25,12 +25,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "(p.description IS NOT NULL AND LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
             "(p.name IS NOT NULL AND LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     List<Product> searchAllBy(@Param("keyword") String keyword);
-    List<Product> findAllByOrderByPriceAsc();
-    List<Product> findAllByOrderByPriceDesc();
-    List<Product> findAllByOrderByStockAsc();
-    List<Product> findAllByOrderByStockDesc();
-    List<Product> findAllByOrderByNameAsc();
-    List<Product> findAllByOrderByNameDesc();
     Long countByVendorId(Long vendor_id);
     @NotNull Optional<Product> findById(@NotNull Long productId);
     List<Product> findByVendorId(Long vendorId);

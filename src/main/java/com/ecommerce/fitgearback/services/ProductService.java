@@ -71,8 +71,11 @@ public class ProductService {
         return productMapper.toProductResponse(product);
     }
 
-    public List<Product> searchProducts(String keyword) {
-        return productRepository.searchAllBy(keyword);
+    public List<ProductResponse> searchProducts(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return new ArrayList<>();
+        }
+        return productMapper.toProductResponseList(productRepository.searchAllBy(keyword));
     }
 
     public ProductResponse createProduct(ProductRequest request) {
@@ -166,15 +169,16 @@ public class ProductService {
     }
 
     public List<ProductResponse> getAllSorted(String sortBy) {
-        List<Product> products = switch (sortBy.toLowerCase()) {
-            case "price_asc" -> productRepository.findAllByOrderByPriceAsc();
-            case "price_desc" -> productRepository.findAllByOrderByPriceDesc();
-            case "stock_asc" -> productRepository.findAllByOrderByStockAsc();
-            case "stock_desc" -> productRepository.findAllByOrderByStockDesc();
-            case "name_asc" -> productRepository.findAllByOrderByNameAsc();
-            case "name_desc" -> productRepository.findAllByOrderByNameDesc();
-            default -> productRepository.findAll();
-        };
+        Sort sort = Sort.unsorted();
+        if (!sortBy.isBlank()) {
+            String[] parts = sortBy.split("_");
+            if (parts.length == 2) {
+                String field = parts[0];
+                Sort.Direction direction = parts[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+                sort = Sort.by(direction, field);
+            }
+        }
+        List<Product> products = productRepository.findAll(sort);
         return productMapper.toProductResponseList(products);
     }
 
