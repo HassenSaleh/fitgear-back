@@ -76,7 +76,7 @@ public class ChapaController {
                 request.setCustomization(customization);
             }
 
-            // Initialize payment
+
             ChapaResponse response = chapaService.initializePayment(request);
             logger.info("Payment initialized for order {} with txRef: {}", order.getId(), order.getTxRef());
 
