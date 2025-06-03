@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -135,4 +136,14 @@ public class GlobalExceptionHandler {
         ErrorDto error = new ErrorDto(ex.getMessage(), HttpStatus.NOT_FOUND.value());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<Map<String, Object>> handleIOException(IOException e) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Internal Server Error");
+        errorResponse.put("message", "An unexpected error occurred: " + e.getMessage());
+        errorResponse.put("timestamp", LocalDateTime.now().toString());
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 }

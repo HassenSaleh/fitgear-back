@@ -18,9 +18,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -94,5 +96,19 @@ public class AuthController {
                     .orElseGet(() -> ResponseEntity.notFound().build());
             default -> ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         };
+    }
+
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Long userId)) {
+            throw new AccessDeniedException("Unauthorized");
+        }
+        return userId;
+    }
+
+    private boolean hasRole(String role) {
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(auth -> auth.equals( "ROLE_" + role));
     }
 }

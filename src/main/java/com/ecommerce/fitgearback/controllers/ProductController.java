@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Set;
 
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @AllArgsConstructor
@@ -30,42 +29,41 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @GetMapping("/")
-    public ResponseEntity<List<ProductResponse>> getAllProductsByCategory(@RequestParam(required = false) Long categoryId) {
-        List<ProductResponse> products = productService.getAllProductsByCategory(categoryId);
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
+    @GetMapping
+    public ResponseEntity<Page<ProductResponse>> getAllProductsByCategory(
+            @RequestParam(required = false) Long categoryId, Pageable pageable) {
+        Page<ProductResponse> products = productService.getAllProductsByCategory(categoryId, pageable);
+
         return ResponseEntity.ok(products);
     }
 
 
 
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<ProductResponse>> getProductsByCategory(@PathVariable Long categoryId) {
-        List<ProductResponse> products = productService.getAllProductsByCategory(categoryId);
-        return ResponseEntity.ok(products);
-    }
-
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
         ProductResponse product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
 
-    @GetMapping("/category/vendor/{vendorId}")
-    public ResponseEntity<List<ProductResponse>> getProductByVendorId(@PathVariable Long vendorId) {
-        List<ProductResponse> products = productService.getAllProductsByVendor(vendorId);
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
+    @GetMapping("/vendor/{vendorId}")
+    public ResponseEntity<Page<ProductResponse>> getProductsByVendorId(
+            @PathVariable Long vendorId, Pageable pageable) {
+        Page<ProductResponse> products = productService.getAllProductsByVendor(vendorId, pageable);
         return ResponseEntity.ok(products);
     }
 
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
     @GetMapping("/search")
-    public ResponseEntity<List<ProductResponse>> searchProducts(
-            @RequestParam String keyword){
-        var response = productService.searchProducts(keyword);
-        if(response.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Page<ProductResponse>> searchProducts(
+            @RequestParam String keyword, Pageable pageable) {
+        Page<ProductResponse> response = productService.searchProducts(keyword, pageable);
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
     @GetMapping("/{id}/image")
     public ResponseEntity<Resource> getProductImage(@PathVariable Long id) {
         Product product = productService.getProductEntityById(id);
@@ -79,21 +77,17 @@ public class ProductController {
     }
 
     @PreAuthorize("hasRole('VENDOR')")
-    @PostMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductResponse> createProduct(
-            @ModelAttribute ProductRequest productRequest,
+            @ModelAttribute @Valid ProductRequest productRequest,
             UriComponentsBuilder uriBuilder) {
-
         ProductResponse createdProduct = productService.createProduct(productRequest);
-
         var uri = uriBuilder
-                .path("/api/v1/product/{id}")
+                .path("/api/v1/products/{id}")
                 .buildAndExpand(createdProduct.getId())
                 .toUri();
-
         return ResponseEntity.created(uri).body(createdProduct);
     }
-
 
     @PreAuthorize("hasRole('VENDOR')")
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -112,17 +106,11 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-    private static final Set<String> VALID_SORT_FIELDS = Set.of(
-            "price_asc", "price_desc", "stock_asc", "stock_desc", "name_asc", "name_desc"
-    );
-
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
     @GetMapping("/sorted")
-    public ResponseEntity<List<ProductResponse>> getSortedProducts(
-            @RequestParam(defaultValue = "") String sortBy) {
-        if (!sortBy.isBlank() && !VALID_SORT_FIELDS.contains(sortBy.toLowerCase())) {
-            throw new IllegalArgumentException("Invalid sort field: " + sortBy);
-        }
-        List<ProductResponse> sorted = productService.getAllSorted(sortBy);
+    public ResponseEntity<Page<ProductResponse>> getSortedProducts(
+            @RequestParam(defaultValue = "") String sortBy, Pageable pageable) {
+        Page<ProductResponse> sorted = productService.getAllSorted(sortBy, pageable);
         return ResponseEntity.ok(sorted);
     }
 }

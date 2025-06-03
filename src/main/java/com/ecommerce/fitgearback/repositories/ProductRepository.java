@@ -1,31 +1,47 @@
 package com.ecommerce.fitgearback.repositories;
 
 import com.ecommerce.fitgearback.models.Product;
+import jakarta.persistence.LockModeType;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
     @EntityGraph(attributePaths = "category")
-    List<Product> findByCategoryId(Long categoryId);
-    @EntityGraph(attributePaths = "category")
-    @Query("SELECT p FROM Product p")
-    List<Product> findAllWithCategory();
+    @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.active = :status")
+    Page<Product> findByCategoryId(@Param("categoryId") Long categoryId,Pageable pageable);
 
-    @Query("SELECT p FROM Product p WHERE " +
+    @NotNull Page<Product> findAll(@NotNull Pageable pageable);
+
+    @EntityGraph(attributePaths = "category")
+    @Query("SELECT p FROM Product p WHERE p.active = :status")
+    Page<Product> findAllWithCategory(Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE p.active = :status AND " +
             "(p.brand IS NOT NULL AND LOWER(p.brand) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
             "(p.description IS NOT NULL AND LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
             "(p.name IS NOT NULL AND LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    List<Product> searchAllBy(@Param("keyword") String keyword);
-    Long countByVendorId(Long vendor_id);
+    Page<Product> searchAllBy(@Param("keyword") String keyword,Pageable pageable);
+
+    Long countByVendorId(Long vendorId);
+
     @NotNull Optional<Product> findById(@NotNull Long productId);
-    List<Product> findByVendorId(Long vendorId);
+
+    @Query("SELECT p FROM Product p WHERE p.vendor.id = :vendorId AND p.active = :status")
+    Page<Product> findByVendorId(@Param("vendorId") Long vendorId, Pageable pageable);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Product p WHERE p.id IN :ids")
+    List<Product> findAllByIdWithLock(@Param("ids") Set<Long> ids);
 }

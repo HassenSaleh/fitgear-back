@@ -3,7 +3,6 @@ package com.ecommerce.fitgearback.annotations;
 import com.ecommerce.fitgearback.dtos.others.LowercaseValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

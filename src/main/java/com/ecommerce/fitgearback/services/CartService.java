@@ -133,4 +133,10 @@ public class CartService {
                 .map(cartMapper::toCartItemResponse)
                 .toList();
     }
+
+    public CartResponse getCartWithItems(Long id) {
+        Cart cart = cartRepository.findByIdWithItemsFetched(id)
+                .orElseThrow(() -> new CartNotFoundException("Cart not found with ID: " + id));
+        return cartMapper.toCartResponse(cart);
+    }
 }

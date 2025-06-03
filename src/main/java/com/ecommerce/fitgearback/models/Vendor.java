@@ -47,6 +47,10 @@ public class Vendor implements JwtUser {
     @JsonIgnore
     private Set<Role> roles;
 
+    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders;
+
+
     @Override
     public Long getId() {
         return id;

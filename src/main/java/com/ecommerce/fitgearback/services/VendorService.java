@@ -2,7 +2,10 @@ package com.ecommerce.fitgearback.services;
 
 import com.ecommerce.fitgearback.dtos.vendor.*;
 import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
+import com.ecommerce.fitgearback.mappers.OrderMapper;
 import com.ecommerce.fitgearback.mappers.VendorMapper;
+import com.ecommerce.fitgearback.models.Customer;
+import com.ecommerce.fitgearback.models.Order;
 import com.ecommerce.fitgearback.models.Role;
 import com.ecommerce.fitgearback.models.Vendor;
 import com.ecommerce.fitgearback.repositories.*;
@@ -35,7 +38,7 @@ public class VendorService {
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
-
+    private final OrderMapper orderMapper;
 
     @Transactional
     public VendorResponse sign(VendorRequest vendorRequest) {
@@ -46,6 +49,13 @@ public class VendorService {
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         vendor.setRoles(Collections.singleton(vendorRole));
         Vendor savedVendor = vendorRepository.save(vendor);
+//        Vendor ven = vendorRepository.findById(dto.getVendorId()).orElseThrow(...);
+//        Customer customer = customerRepository.findById(dto.getCustomerId()).orElseThrow(...);
+//
+//        Order order = orderMapper.toOrder(dto);
+//        order.setVendor(vendor);
+//        order.setCustomer(customer);
+
         return vendorMapper.toResponse(savedVendor);
     }
     public List<VendorResponse> getAllVendors() {

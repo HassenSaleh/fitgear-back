@@ -1,18 +1,13 @@
 package com.ecommerce.fitgearback.controllers;
 
-import com.ecommerce.fitgearback.dtos.customer.CustomerRequest;
-import com.ecommerce.fitgearback.dtos.customer.CustomerResponse;
 import com.ecommerce.fitgearback.dtos.login.JwtRequest;
-import com.ecommerce.fitgearback.dtos.login.JwtResponse;
 import com.ecommerce.fitgearback.dtos.product.ProductRequest;
 import com.ecommerce.fitgearback.dtos.product.ProductResponse;
 import com.ecommerce.fitgearback.dtos.signup.SignUpResponse;
 import com.ecommerce.fitgearback.dtos.vendor.*;
-import com.ecommerce.fitgearback.models.Product;
 import com.ecommerce.fitgearback.services.AuthService;
 import com.ecommerce.fitgearback.services.ProductService;
 import com.ecommerce.fitgearback.services.VendorService;
-import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -25,9 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import java.net.URI;
-import java.util.UUID;
 
 @CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
 @PreAuthorize(value = "hasRole('VENDOR')")
@@ -107,14 +100,12 @@ public class VendorController {
 
     @PreAuthorize(value = "hasRole('VENDOR')")
     @PostMapping(value = "/product", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ProductResponse> addProduct(
+    public ResponseEntity<ProductResponse> createProduct(
             @Valid @RequestPart("product") ProductRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image) {
         ProductResponse createdProduct = productService.createProduct(request);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
-
-
     @PreAuthorize(value = "hasRole('VENDOR')")
     @DeleteMapping("/product/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
