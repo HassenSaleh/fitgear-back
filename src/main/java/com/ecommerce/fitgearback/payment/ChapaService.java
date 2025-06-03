@@ -50,7 +50,7 @@ public class ChapaService {
         requestBody.put("callback_url", callbackUrl);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Basic "  + secretKey);
+        headers.set("Authorization", "Bearer "  + secretKey);
         headers.set("Content-Type", "application/json");
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(requestBody), headers);
 
