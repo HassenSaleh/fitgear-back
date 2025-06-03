@@ -22,14 +22,15 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -37,52 +38,64 @@ import java.util.UUID;
 public class ProductService {
 
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
+    private static final String UPLOAD_DIR = "Uploads/";
+    private static final Set<String> VALID_SORT_FIELDS = Set.of(
+            "price_asc", "price_desc", "stock_asc", "stock_desc", "name_asc", "name_desc"
+    );
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
     private final AuthService authService;
-    private static final String UPLOAD_DIR = "Uploads/";
 
-    public List<ProductResponse> getAllProductsByCategory(Long categoryId) {
-        List<Product> products = categoryId != null
-                ? productRepository.findByCategoryId(categoryId)
-                : productRepository.findAllWithCategory();
-        return productMapper.toProductResponseList(products);
-    }
-
-    public List<ProductResponse> getAllProductsByVendor(Long vendorId) {
-        List<Product> products = vendorId != null
-                ? productRepository.findByVendorId(vendorId)
-                : productRepository.findAllWithCategory();
-        return productMapper.toProductResponseList(products);
-    }
-    public List<ProductResponse> getAllProducts(){
-        List<Product> products = productRepository.findAllWithCategory();
-        if(products.isEmpty()) {
-            return null;
+    public Page<ProductResponse> getAllProductsByCategory(Long categoryId, Pageable pageable) {
+        if (categoryId != null && !categoryRepository.existsById(categoryId)) {
+            logger.warn("Category ID {} does not exist", categoryId);
+            throw new IllegalArgumentException("Category not found with ID: " + categoryId);
         }
-        return productMapper.toProductResponseList(products);
+        Page<Product> products = categoryId != null
+                ? productRepository.findByCategoryId(categoryId, pageable)
+                : productRepository.findAllWithCategory(pageable);
+        return products.map(productMapper::toProductResponse);
+    }
+
+    public Page<ProductResponse> getAllProducts(Pageable pageable) {
+        Page<Product> products = productRepository.findAll(pageable);
+        return products.map(productMapper::toProductResponse);
+    }
+
+    public Page<ProductResponse> getAllProductsByVendor(Long vendorId, Pageable pageable) {
+        if (vendorId == null) {
+            throw new IllegalArgumentException("Vendor ID is required");
+        }
+        Page<Product> products = productRepository.findByVendorId(vendorId, pageable);
+        return products.map(productMapper::toProductResponse);
     }
 
     public ProductResponse getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
+        if (product.getActive() != ProductStatus.ACTIVE) {
+            throw new ProductNotFoundException("Product is not active: ID " + id);
+        }
         return productMapper.toProductResponse(product);
     }
 
-    public List<ProductResponse> searchProducts(String keyword) {
+    public Page<ProductResponse> searchProducts(String keyword, Pageable pageable) {
         if (keyword == null || keyword.isBlank()) {
-            return new ArrayList<>();
+            return Page.empty(pageable);
         }
-        return productMapper.toProductResponseList(productRepository.searchAllBy(keyword));
+        return productRepository.searchAllBy(keyword, pageable).map(productMapper::toProductResponse);
     }
 
+    @Transactional
     public ProductResponse createProduct(ProductRequest request) {
         Vendor vendor = authService.getCurrentVendor();
         if (vendor == null) {
             throw new AccessDeniedException("Authenticated user is not a vendor");
         }
+
+        validateProductRequest(request);
 
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found: " + request.getCategoryId()));
@@ -94,39 +107,35 @@ public class ProductService {
         product.setStock(request.getStock());
         product.setBrand(request.getBrand());
         product.setCategory(category);
-        product.setVendor(vendor); // Set vendor from authenticated user
+        product.setVendor(vendor);
         product.setActive(request.getStatus() != null ? request.getStatus() : ProductStatus.ACTIVE);
         product.setCreatedAt(LocalDateTime.now());
 
         if (request.getImage() != null && !request.getImage().isEmpty()) {
             try {
-                String fileName = UUID.randomUUID() + "_" + request.getImage().getOriginalFilename();
-                Path filePath = Paths.get(UPLOAD_DIR, fileName);
-                Files.createDirectories(filePath.getParent());
-                request.getImage().transferTo(filePath);
+                String fileName = saveImage(request.getImage());
                 product.setImageName(fileName);
                 product.setImageType(request.getImage().getContentType());
             } catch (IOException e) {
-                throw new RuntimeException("Failed to upload image: " + e.getMessage());
+                logger.error("Failed to upload image for product: {}", request.getName(), e);
+                throw new ImageProcessingException("Failed to upload image", e);
             }
         }
         Product savedProduct = productRepository.save(product);
         return productMapper.toProductResponse(savedProduct);
     }
 
-
-
     @Transactional
     public ProductResponse updateProduct(Long id, ProductRequest productRequest, MultipartFile image) {
         Vendor vendor = authService.getCurrentVendor();
-        var product = productRepository.findById(id)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
 
         if (!product.getVendor().getId().equals(vendor.getId())) {
             throw new AccessDeniedException("You can only update your own products");
         }
 
-        var category = categoryRepository.findById(productRequest.getCategoryId())
+        Category category = categoryRepository.findById(productRequest.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid category ID: " + productRequest.getCategoryId()));
 
         validateProductRequest(productRequest);
@@ -168,9 +177,13 @@ public class ProductService {
         productRepository.delete(product);
     }
 
-    public List<ProductResponse> getAllSorted(String sortBy) {
-        Sort sort = Sort.unsorted();
-        if (!sortBy.isBlank()) {
+    public Page<ProductResponse> getAllSorted(String sortBy, Pageable pageable) {
+        Sort sort = pageable.getSort().isSorted() ? pageable.getSort() : Sort.unsorted();
+
+        if (!sortBy.isBlank() && !pageable.getSort().isSorted()) {
+            if (!VALID_SORT_FIELDS.contains(sortBy.toLowerCase())) {
+                throw new IllegalArgumentException("Invalid sort field: " + sortBy);
+            }
             String[] parts = sortBy.split("_");
             if (parts.length == 2) {
                 String field = parts[0];
@@ -178,21 +191,32 @@ public class ProductService {
                 sort = Sort.by(direction, field);
             }
         }
-        List<Product> products = productRepository.findAll(sort);
-        return productMapper.toProductResponseList(products);
+
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                sort
+        );
+
+        Page<Product> products = productRepository.findAll(sortedPageable);
+        return products.map(productMapper::toProductResponse);
     }
 
     public Product getProductEntityById(Long id) {
-        return productRepository.findById(id)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
+        if (product.getActive() != ProductStatus.ACTIVE) {
+            throw new ProductNotFoundException("Product is not active: ID " + id);
+        }
+        return product;
     }
 
     private void validateProductRequest(ProductRequest request) {
         if (request.getName() == null || request.getName().isBlank()) {
             throw new IllegalArgumentException("Product name is required");
         }
-        if (request.getPrice() == null || request.getPrice().compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Price must be non-negative");
+        if (request.getPrice() == null || request.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Price must be positive");
         }
         if (request.getStock() == null || request.getStock() < 0) {
             throw new IllegalArgumentException("Stock must be non-negative");
@@ -204,12 +228,12 @@ public class ProductService {
         if (!List.of("jpg", "jpeg", "png", "gif").contains(extension.toLowerCase())) {
             throw new IllegalArgumentException("Invalid image format: " + extension);
         }
-        if (image.getSize() > 5 * 1024 * 8 * 1024) { // 5MB limit
+        if (image.getSize() > 5 * 1024 * 1024) { // 5MB limit
             throw new IllegalArgumentException("Image size exceeds 5MB");
         }
 
         String imageName = "product-" + UUID.randomUUID() + "." + extension;
-        Path uploadDir = Paths.get("Uploads");
+        Path uploadDir = Paths.get(UPLOAD_DIR);
         if (!Files.exists(uploadDir)) {
             Files.createDirectories(uploadDir);
         }
@@ -221,7 +245,7 @@ public class ProductService {
     private void deleteImage(String imageName) {
         if (imageName != null) {
             try {
-                Path imagePath = Paths.get("Uploads", imageName);
+                Path imagePath = Paths.get(UPLOAD_DIR, imageName);
                 Files.deleteIfExists(imagePath);
             } catch (IOException e) {
                 logger.warn("Failed to delete image: {}", imageName, e);

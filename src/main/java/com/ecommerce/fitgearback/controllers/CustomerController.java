@@ -3,7 +3,6 @@ package com.ecommerce.fitgearback.controllers;
 import com.ecommerce.fitgearback.dtos.customer.*;
 import com.ecommerce.fitgearback.dtos.login.JwtRequest;
 import com.ecommerce.fitgearback.dtos.login.JwtResponse;
-import com.ecommerce.fitgearback.dtos.order.OrderResponse;
 import com.ecommerce.fitgearback.dtos.product.ProductResponse;
 import com.ecommerce.fitgearback.dtos.signup.SignUpResponse;
 import com.ecommerce.fitgearback.mappers.CustomerMapper;
@@ -11,24 +10,20 @@ import com.ecommerce.fitgearback.services.AuthService;
 import com.ecommerce.fitgearback.services.CustomerService;
 import com.ecommerce.fitgearback.services.OrderService;
 import com.ecommerce.fitgearback.services.ProductService;
-import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import java.net.URI;
-import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
 @PreAuthorize(value = "hasRole('CUSTOMER')")
@@ -45,18 +40,11 @@ public class CustomerController {
     private final AuthService authService;
     private final ProductService productService;
 
-    @PreAuthorize(value = "hasRole('CUSTOMER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/")
-    public ResponseEntity<List<ProductResponse>> getAll() {
-        List<CustomerResponse> customers = customerService.getAllCustomers();
-
-        List<ProductResponse> products = productService.getAllProducts();
-
-        if (products.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        } else {
-            return ResponseEntity.ok(products);
-        }
+    public ResponseEntity<Page<ProductResponse>> getAll(Pageable pageable) {
+        Page<ProductResponse> products = productService.getAllProducts(pageable);
+        return ResponseEntity.ok(products);
     }
 
     @PreAuthorize(value = "hasRole('CUSTOMER')")
@@ -118,37 +106,6 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(customer);
-    }
-
-
-    @PreAuthorize(value = "hasRole('CUSTOMER')||hasRole('VENDOR')")
-    @GetMapping("/my-orders")
-    public List<OrderResponse> getMyOrders() {
-        Long userId = getCurrentUserId();
-
-        if (hasRole("CUSTOMER")) {
-            return orderService.getOrdersByCustomerId(userId);
-        }
-
-        if (hasRole("VENDOR")) {
-            return orderService.getOrdersByVendorId(userId);
-        }
-
-        throw new AccessDeniedException("Not authorized");
-    }
-
-    private Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof Long userId)) {
-            throw new AccessDeniedException("Unauthorized");
-        }
-        return userId;
-    }
-
-    private boolean hasRole(String role) {
-        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(auth -> auth.equals( "ROLE_" + role));
     }
 
 }

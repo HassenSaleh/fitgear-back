@@ -1,9 +1,7 @@
 package com.ecommerce.fitgearback.controllers;
 
-
 import com.ecommerce.fitgearback.dtos.category.CategoryRequest;
 import com.ecommerce.fitgearback.dtos.category.CategoryResponse;
-import com.ecommerce.fitgearback.models.Category;
 import com.ecommerce.fitgearback.services.CategoryService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 
 @AllArgsConstructor
 @Data

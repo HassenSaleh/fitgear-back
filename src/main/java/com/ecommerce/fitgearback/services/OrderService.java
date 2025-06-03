@@ -13,33 +13,33 @@ import com.ecommerce.fitgearback.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
 public class OrderService {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
     private final AuthService authService;
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final ProductRepository productRepository;
     private final CartRepository cartRepository;
 
-    public List<OrderResponse> getAllOrders() {
+    public Page<OrderResponse> getAllOrders(Pageable pageable) {
         Customer customer = authService.getCurrentCustomer();
-        List<Order> orders = orderRepository.findByCustomerIdWithItems(customer.getId());
-        return orders.stream()
-                .map(orderMapper::toOrderResponse)
-                .toList();
+        Page<Order> orders = orderRepository.findByCustomerIdWithItems(customer.getId(), pageable);
+        return orders.map(orderMapper::toOrderResponse);
     }
 
     public OrderResponse getOrder(Long orderId) {
@@ -57,56 +57,24 @@ public class OrderService {
     @Transactional
     public OrderResponse placeOrder(@NotNull PlaceOrderRequest request) {
         Customer customer = authService.getCurrentCustomer();
+        logger.info("Placing order for customer ID: {}", customer.getId());
 
         List<Map<Long, Integer>> productQuantitiesList = request.getProductQuantities();
         if (productQuantitiesList == null || productQuantitiesList.isEmpty()) {
+            logger.error("No products specified in order for customer ID: {}", customer.getId());
             throw new IllegalArgumentException("No products specified in the order.");
         }
 
+        // Flatten List<Map<Long, Integer>> into Map<Long, Integer>, summing quantities for duplicate product IDs
         Map<Long, Integer> productQuantities = productQuantitiesList.stream()
                 .flatMap(map -> map.entrySet().stream())
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue,
-                        Integer::sum,
-                        HashMap::new
+                        Integer::sum
                 ));
 
-        if (productQuantities.isEmpty()) {
-            throw new IllegalArgumentException("No valid products specified in the order.");
-        }
-
-        List<Long> providedProductIds = request.getProductIds();
-        if (providedProductIds != null && !providedProductIds.isEmpty()) {
-            Set<Long> quantityProductIds = productQuantities.keySet();
-            if (!quantityProductIds.containsAll(providedProductIds)) {
-                throw new IllegalArgumentException("Provided product IDs do not match quantities.");
-            }
-        }
-
-        Set<Long> productIds = productQuantities.keySet();
-        List<Product> products = productRepository.findAllById(productIds);
-        if (products.size() != productIds.size()) {
-            throw new IllegalArgumentException("One or more products not found.");
-        }
-        products.forEach(product -> {
-            Integer quantity = productQuantities.get(product.getId());
-            if (product.getStock() < quantity) {
-                throw new IllegalArgumentException("Insufficient stock for product ID: " + product.getId());
-            }
-        });
-
-        products.forEach(product -> {
-            Integer quantity = productQuantities.get(product.getId());
-            if (quantity == null || quantity <= 0) {
-                throw new IllegalArgumentException("Invalid quantity for product ID: " + product.getId());
-            }
-            if (product.getStock() < quantity) {
-                throw new IllegalArgumentException("Insufficient stock for product ID: " + product.getId());
-            }
-            product.setStock(product.getStock() - quantity);
-        });
-
+        validateAndUpdateStock(productQuantities);
 
         Order order = new Order();
         order.setCustomer(customer);
@@ -114,12 +82,16 @@ public class OrderService {
         order.setPaymentMethod(request.getPaymentMethod());
         order.setPaymentStatus(PaymentStatus.PENDING);
         order.setCreatedAt(LocalDateTime.now());
+        order.setTxRef("tx-" + java.util.UUID.randomUUID());
 
-        List<OrderItem> orderItems = products.stream()
-                .map(product -> {
-                    Integer quantity = productQuantities.get(product.getId());
-                    if (quantity == null || quantity <= 0) {
-                        throw new IllegalArgumentException("Invalid quantity for product ID: " + product.getId());
+        List<OrderItem> orderItems = productQuantities.entrySet().stream()
+                .map(entry -> {
+                    Product product = productRepository.findById(entry.getKey())
+                            .orElseThrow(() -> new IllegalArgumentException("Product not found: " + entry.getKey()));
+                    Integer quantity = entry.getValue();
+                    if (quantity <= 0) {
+                        logger.error("Invalid quantity {} for product ID: {}", quantity, entry.getKey());
+                        throw new IllegalArgumentException("Invalid quantity for product ID: " + entry.getKey());
                     }
                     return new OrderItem(order, product, quantity);
                 })
@@ -129,10 +101,12 @@ public class OrderService {
         order.setTotalAmount(orderItems.stream()
                 .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
-        productRepository.saveAll(products);
+
         Order savedOrder = orderRepository.save(order);
+        logger.info("Order placed successfully with ID: {} for customer ID: {}", savedOrder.getId(), customer.getId());
         return orderMapper.toOrderResponse(savedOrder);
     }
+
 
     @Transactional
     public OrderResponse placeOrderFromCart(PlaceOrderRequest request) {
@@ -143,20 +117,25 @@ public class OrderService {
             throw new IllegalArgumentException("Cart is empty");
         }
 
+        Map<Long, Integer> productQuantities = cart.getItems().stream()
+                .collect(Collectors.toMap(
+                        item -> item.getProduct().getId(),
+                        CartItem::getQuantity
+                ));
+
+        validateAndUpdateStock(productQuantities);
+
         Order order = new Order();
         order.setCustomer(customer);
         order.setShippingAddress(request.getShippingAddress());
         order.setPaymentMethod(request.getPaymentMethod());
         order.setPaymentStatus(PaymentStatus.PENDING);
         order.setCreatedAt(LocalDateTime.now());
+        order.setTxRef("tx-" + java.util.UUID.randomUUID());
 
         List<OrderItem> orderItems = cart.getItems().stream()
                 .map(cartItem -> {
                     Product product = cartItem.getProduct();
-                    if (product.getStock() < cartItem.getQuantity()) {
-                        throw new IllegalArgumentException("Insufficient stock for product: " + product.getName());
-                    }
-                    product.setStock(product.getStock() - cartItem.getQuantity());
                     return new OrderItem(order, product, cartItem.getQuantity());
                 })
                 .toList();
@@ -166,34 +145,48 @@ public class OrderService {
                 .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
 
-        productRepository.saveAll(orderItems.stream().map(OrderItem::getProduct).toList());
-        orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
         cart.clear();
         cartRepository.save(cart);
 
-        return orderMapper.toOrderResponse(order);
+        return orderMapper.toOrderResponse(savedOrder);
     }
 
-    public List<OrderResponse> getOrdersByCustomerId(Long customerId) {
+    public Page<OrderResponse> getOrdersByCustomerId(Long customerId, Pageable pageable) {
         Customer currentCustomer = authService.getCurrentCustomer();
         if (!currentCustomer.getId().equals(customerId)) {
             throw new AccessDeniedException("You can only view your own orders.");
         }
 
-        List<Order> orders = orderRepository.findByCustomerIdWithItems(customerId);
-        return orders.stream()
-                .map(orderMapper::toOrderResponse)
-                .toList();
+        Page<Order> orders = orderRepository.findByCustomerIdWithItems(customerId, pageable);
+        return orders.map(orderMapper::toOrderResponse);
     }
 
-    public List<OrderResponse> getOrdersByVendorId(Long vendorId) {
-
-        //maybe
+    public Page<OrderResponse> getOrdersByVendorId(Long vendorId, Pageable pageable) {
         Vendor currentVendor = authService.getCurrentVendor();
         if (!currentVendor.getId().equals(vendorId) && !authService.getCurrentAdmin().getRoleNames().contains("ADMIN")) {
             throw new AccessDeniedException("You can only view your own orders.");
         }
-        List<Order> orders = orderRepository.findByProductsVendorId(vendorId);
-        return orders.stream().map(orderMapper::toOrderResponse).toList();
+        Page<Order> orders = orderRepository.findByProductsVendorId(vendorId, pageable);
+        return orders.map(orderMapper::toOrderResponse);
+    }
+
+    @Transactional
+    public void validateAndUpdateStock(@NotNull Map<Long, Integer> productQuantities) {
+        List<Product> products = productRepository.findAllByIdWithLock(productQuantities.keySet());
+        if (products.size() != productQuantities.size()) {
+            throw new IllegalArgumentException("One or more products not found.");
+        }
+        products.forEach(product -> {
+            Integer quantity = productQuantities.get(product.getId());
+            if (quantity == null || quantity <= 0) {
+                throw new IllegalArgumentException("Invalid quantity for product ID: " + product.getId());
+            }
+            if (product.getStock() < quantity) {
+                throw new IllegalArgumentException("Insufficient stock for product ID: " + product.getId());
+            }
+            product.setStock(product.getStock() - quantity);
+        });
+        productRepository.saveAll(products);
     }
 }

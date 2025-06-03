@@ -145,4 +145,5 @@ public class GlobalExceptionHandler {
         errorResponse.put("timestamp", LocalDateTime.now().toString());
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
 }
