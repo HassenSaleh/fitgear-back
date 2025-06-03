@@ -19,4 +19,4 @@ spring:
 chapa:
   secret-key: ${SECRET_KEY}
   public-key: ${PUBLIC_KEY}
-  api-url: https://api.chapa.co/v1
+  api-url: https://api.chapa.co/v1/transaction/initialize

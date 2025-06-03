@@ -33,6 +33,7 @@ public class Order {
     private PaymentMethod paymentMethod;
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
+    private String txRef;
 
     private LocalDateTime createdAt;
 
@@ -46,6 +47,11 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     @ToString.Exclude
     private Payment payment;
+
+    private BigDecimal totalPrice;
+
+    @ManyToOne
+    private Vendor vendor;
 
     @PrePersist
     public void prePersist() {

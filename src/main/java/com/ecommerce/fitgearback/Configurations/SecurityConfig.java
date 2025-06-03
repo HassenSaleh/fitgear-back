@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/carts/**").hasRole("CUSTOMER")
                         .requestMatchers("/api/v1/orders/**").hasRole("CUSTOMER")
+                        .requestMatchers("/api/v1/checkout/**").permitAll()
                         .requestMatchers("/api/v1/payments/**").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasRole("VENDOR")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasRole("VENDOR")

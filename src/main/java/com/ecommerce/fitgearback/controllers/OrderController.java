@@ -1,14 +1,30 @@
 package com.ecommerce.fitgearback.controllers;
 
+import com.ecommerce.fitgearback.dtos.order.OrderItemRequest;
+import com.ecommerce.fitgearback.dtos.order.OrderRequest;
 import com.ecommerce.fitgearback.dtos.order.OrderResponse;
 import com.ecommerce.fitgearback.dtos.order.PlaceOrderRequest;
+import com.ecommerce.fitgearback.enums.OrderStatus;
+import com.ecommerce.fitgearback.enums.PaymentMethod;
+import com.ecommerce.fitgearback.enums.PaymentStatus;
+import com.ecommerce.fitgearback.models.Customer;
+import com.ecommerce.fitgearback.models.Order;
+import com.ecommerce.fitgearback.models.OrderItem;
+import com.ecommerce.fitgearback.models.Product;
+import com.ecommerce.fitgearback.repositories.OrderRepository;
+import com.ecommerce.fitgearback.repositories.ProductRepository;
+import com.ecommerce.fitgearback.services.CustomerService;
 import com.ecommerce.fitgearback.services.OrderService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
 @AllArgsConstructor
@@ -16,6 +32,8 @@ import java.util.List;
 @RequestMapping("/api/v1/orders")
 public class OrderController {
     private final OrderService orderService;
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
 
     @GetMapping("/")
     public ResponseEntity<List<OrderResponse>> getAllOrders() {
@@ -44,6 +62,30 @@ public class OrderController {
     public ResponseEntity<List<OrderResponse>> getOrdersByVendorId(@PathVariable Long vendorId) {
         List<OrderResponse> orders = orderService.getOrdersByVendorId(vendorId);
         return ResponseEntity.ok(orders);
+    }
+
+    @PostMapping
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderRequest orderRequest, Authentication authentication) {
+        Order order = new Order();
+        order.setCustomer(new Customer()); // Set from authentication
+        order.setTotalAmount(orderRequest.getTotalAmount());
+        order.setStatus(OrderStatus.PENDING);
+        order.setPaymentMethod(orderRequest.getPaymentMethod());
+        order.setPaymentStatus(PaymentStatus.PENDING);
+        order.setTxRef("tx-" + UUID.randomUUID().toString());
+        order.setShippingAddress(orderRequest.getShippingAddress());
+
+        List<OrderItem> items = new ArrayList<>();
+        for (OrderItemRequest itemRequest : orderRequest.getItems()) {
+            Product product = productRepository.findById(itemRequest.getProductId())
+                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + itemRequest.getProductId()));
+            OrderItem item = new OrderItem(order, product, itemRequest.getQuantity());
+            items.add(item);
+        }
+        order.setItems(items);
+
+        orderRepository.save(order);
+        return ResponseEntity.ok(order);
     }
 
 }

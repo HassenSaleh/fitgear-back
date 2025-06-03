@@ -35,6 +35,8 @@ public class OrderItem {
     @Column(nullable = false)
     private BigDecimal priceAtOrder;
 
+    private BigDecimal totalPrice ;
+
     public OrderItem(Order order, @NotNull Product product, int quantity) {
         if (product == null) {
             throw new IllegalArgumentException("Product cannot be null");
