@@ -22,14 +22,14 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1/carts")
+    @RequestMapping("/api/v1/carts")
 
 public class CartController {
 
     private final CartService cartService;
     private final OrderService orderService;
 
-    @PostMapping
+    @PostMapping("/")
     public ResponseEntity<CartResponse> createOrGetCart(UriComponentsBuilder uriBuilder) {
         CartResponse cartDto = cartService.createOrGetCart();
         var uri = uriBuilder.path("/api/v1/carts").build().toUri();
@@ -42,7 +42,7 @@ public class CartController {
         return ResponseEntity.status(HttpStatus.CREATED).body(cartItemDto);
     }
 
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<CartResponse> getCart() {
         CartResponse cartDto = cartService.getCart();
         return ResponseEntity.ok(cartDto);

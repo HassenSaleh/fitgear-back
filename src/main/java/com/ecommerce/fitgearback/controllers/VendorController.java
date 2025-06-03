@@ -5,6 +5,8 @@ import com.ecommerce.fitgearback.dtos.product.ProductRequest;
 import com.ecommerce.fitgearback.dtos.product.ProductResponse;
 import com.ecommerce.fitgearback.dtos.signup.SignUpResponse;
 import com.ecommerce.fitgearback.dtos.vendor.*;
+import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
+import com.ecommerce.fitgearback.models.Product;
 import com.ecommerce.fitgearback.services.AuthService;
 import com.ecommerce.fitgearback.services.ProductService;
 import com.ecommerce.fitgearback.services.VendorService;
@@ -13,6 +15,8 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +25,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true")
 @PreAuthorize(value = "hasRole('VENDOR')")
@@ -112,5 +118,29 @@ public class VendorController {
         productService.deleteProduct(id);
         return ResponseEntity.ok("Product deleted successfully");
     }
+
+    @PreAuthorize(value = "hasRole('VENDOR')")
+    @GetMapping("/{vendorId}/products")
+    public ResponseEntity<Page<ProductResponse>> getProductsByVendor(@PathVariable Long vendorId, Pageable pageable) {
+        try {
+            if (vendorId == null || vendorId <= 0) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            Page<ProductResponse> productResponses = productService.getAllProductsByVendor(vendorId,pageable);
+
+            // Return response
+            if (productResponses.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+
+            return ResponseEntity.ok(productResponses);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 
 }

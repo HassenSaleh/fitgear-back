@@ -1,8 +1,141 @@
+//package com.ecommerce.fitgearback.payment;
+//
+//import com.ecommerce.fitgearback.enums.PaymentMethod;
+//import com.ecommerce.fitgearback.enums.PaymentStatus;
+//import com.ecommerce.fitgearback.mappers.OrderMapper;
+//import com.ecommerce.fitgearback.models.Order;
+//import com.ecommerce.fitgearback.repositories.OrderRepository;
+//import com.fasterxml.jackson.core.JsonProcessingException;
+//import com.fasterxml.jackson.databind.ObjectMapper;
+//import jakarta.transaction.Transactional;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
+//import org.springframework.beans.factory.annotation.Value;
+//import org.springframework.http.HttpEntity;
+//import org.springframework.http.HttpHeaders;
+//import org.springframework.http.HttpMethod;
+//import org.springframework.http.ResponseEntity;
+//import org.springframework.stereotype.Service;
+//import org.springframework.web.client.RestClientException;
+//import org.springframework.web.client.RestTemplate;
+//
+//import java.io.IOException;
+//import java.util.HashMap;
+//import java.util.Map;
+//
+//@Service
+//public class ChapaService {
+//    private static final Logger logger = LoggerFactory.getLogger(ChapaService.class);
+//
+//    @Value("${chapa.secret-key}")
+//    private String secretKey;
+//    @Value("${chapa.api-url}")
+//    private String apiUrl;
+//
+//    private final RestTemplate restTemplate;
+//    private final ObjectMapper objectMapper;
+//    private final OrderRepository orderRepository;
+//
+//    public ChapaService(RestTemplate restTemplate, ObjectMapper objectMapper,OrderRepository orderRepository) {
+//        this.restTemplate = restTemplate;
+//        this.objectMapper = objectMapper;
+//        this.orderRepository = orderRepository;
+//        logger.info("ChapaService initialized");
+//    }
+//
+//    @Transactional
+//    public ChapaResponse initializePayment(Order order, ChapaRequest paymentRequest) throws IOException {
+//        if (secretKey == null || secretKey.isEmpty()) {
+//            logger.error("Chapa secret key is not configured");
+//            throw new IllegalStateException("Chapa secret key is not configured");
+//        }
+//
+//        if (order.getTxRef() == null) {
+//            order.setTxRef("tx-" + order.getId() + "-" + System.currentTimeMillis());
+//            order.setPaymentMethod(PaymentMethod.CHAPA);
+//            order.setPaymentStatus(PaymentStatus.PENDING);
+//            orderRepository.save(order);
+//        }
+//        paymentRequest.setTxRef(order.getTxRef());
+//        logger.debug("Using tx_ref: {}", order.getTxRef());
+//        paymentRequest.setTxRef(order.getTxRef());
+//        if (paymentRequest.getCustomization() == null) {
+//            Map<String, String> customization = new HashMap<>();
+//            customization.put("title", "Merchant Payment");
+//            customization.put("description", "Order payment for ID: " + order.getId());
+//            paymentRequest.setCustomization(customization);
+//        }
+//
+//        String jsonBody;
+//        try {
+//            jsonBody = objectMapper.writeValueAsString(paymentRequest);
+//            logger.debug("Request JSON: {}", jsonBody);
+//        } catch (JsonProcessingException e) {
+//            logger.error("Failed to serialize payment request: {}", e.getMessage());
+//            throw new IOException("Failed to serialize payment request", e);
+//        }
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.set("Authorization", "Bearer " + secretKey);
+//        headers.set("Content-Type", "application/json");
+//        HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+//
+//        logger.info("Sending payment initialization request to Chapa API: {}", apiUrl);
+//        try {
+//            ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, String.class);
+//            String responseBody = response.getBody();
+//            logger.info("Chapa API response: [Code: {}] {}", response.getStatusCodeValue(), responseBody);
+//
+//            if (!response.getStatusCode().is2xxSuccessful()) {
+//                Map<String, Object> errorResponse = objectMapper.readValue(responseBody, Map.class);
+//                String errorMessage = errorResponse.getOrDefault("message", "Unknown error").toString();
+//                throw new IOException("Chapa API error: HTTP " + response.getStatusCodeValue() + " - " + errorMessage);
+//            }
+//
+//            return objectMapper.readValue(responseBody, ChapaResponse.class);
+//        } catch (RestClientException e) {
+//            logger.error("Chapa API request failed: {}", e.getMessage());
+//            throw new IOException("Chapa API request failed: " + e.getMessage(), e);
+//        } catch (JsonProcessingException e) {
+//            logger.error("Failed to parse Chapa API response: {}", e.getMessage());
+//            throw new IOException("Failed to parse Chapa API response", e);
+//        }
+//    }
+//
+//    public boolean verifyPayment(String txRef) throws IOException {
+//        if (secretKey == null || secretKey.isEmpty()) {
+//            logger.error("Chapa secret key is not configured");
+//            throw new IllegalStateException("Chapa secret key is not configured");
+//        }
+//
+//        String url = apiUrl.replace("/transaction/initialize", "/transaction/verify/" + txRef);
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.set("Authorization", "Bearer " + secretKey);
+//        headers.set("Content-Type", "application/json");
+//        HttpEntity<String> entity = new HttpEntity<>(headers);
+//
+//        logger.info("Verifying payment for txRef: {}", txRef);
+//        try {
+//            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+//            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+//            boolean success = "success".equalsIgnoreCase(responseBody.getOrDefault("status", "").toString());
+//            logger.info("Payment verification for txRef {}: {}", txRef, success ? "Successful" : "Failed");
+//            return success;
+//        } catch (RestClientException e) {
+//            logger.error("Payment verification failed for txRef {}: {}", txRef, e.getMessage());
+//            throw new IOException("Payment verification failed: " + e.getMessage(), e);
+//        } catch (JsonProcessingException e) {
+//            logger.error("Failed to parse verification response for txRef {}: {}", txRef, e.getMessage());
+//            throw new IOException("Failed to parse verification response", e);
+//        }
+//    }
+//}
+
+
 package com.ecommerce.fitgearback.payment;
 
 import com.ecommerce.fitgearback.enums.PaymentMethod;
 import com.ecommerce.fitgearback.enums.PaymentStatus;
-import com.ecommerce.fitgearback.mappers.OrderMapper;
 import com.ecommerce.fitgearback.models.Order;
 import com.ecommerce.fitgearback.repositories.OrderRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,6 +155,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class ChapaService {
@@ -36,7 +170,7 @@ public class ChapaService {
     private final ObjectMapper objectMapper;
     private final OrderRepository orderRepository;
 
-    public ChapaService(RestTemplate restTemplate, ObjectMapper objectMapper,OrderRepository orderRepository) {
+    public ChapaService(RestTemplate restTemplate, ObjectMapper objectMapper, OrderRepository orderRepository) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.orderRepository = orderRepository;
@@ -50,14 +184,26 @@ public class ChapaService {
             throw new IllegalStateException("Chapa secret key is not configured");
         }
 
+        // Check if txRef already exists in the database
+        if (order.getTxRef() != null && orderRepository.findByTxRef(order.getTxRef()).isPresent()) {
+            logger.error("Transaction reference already used: {}", order.getTxRef());
+            throw new IllegalStateException("Transaction reference has been used before");
+        }
+
+        // Generate unique txRef if not set
         if (order.getTxRef() == null) {
-            order.setTxRef("tx-" + order.getId() + "-" + System.currentTimeMillis());
+            String newTxRef;
+            do {
+                newTxRef = "tx-" + order.getId() + "-" + UUID.randomUUID();
+            } while (orderRepository.findByTxRef(newTxRef).isPresent());
+            order.setTxRef(newTxRef);
             order.setPaymentMethod(PaymentMethod.CHAPA);
             order.setPaymentStatus(PaymentStatus.PENDING);
             orderRepository.save(order);
         }
-
         paymentRequest.setTxRef(order.getTxRef());
+        logger.debug("Using tx_ref: {}", order.getTxRef());
+
         if (paymentRequest.getCustomization() == null) {
             Map<String, String> customization = new HashMap<>();
             customization.put("title", "Merchant Payment");
@@ -88,6 +234,7 @@ public class ChapaService {
             if (!response.getStatusCode().is2xxSuccessful()) {
                 Map<String, Object> errorResponse = objectMapper.readValue(responseBody, Map.class);
                 String errorMessage = errorResponse.getOrDefault("message", "Unknown error").toString();
+                logger.error("Chapa API error: HTTP {} - {}", response.getStatusCodeValue(), errorMessage);
                 throw new IOException("Chapa API error: HTTP " + response.getStatusCodeValue() + " - " + errorMessage);
             }
 

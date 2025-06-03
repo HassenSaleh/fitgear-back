@@ -29,15 +29,22 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
-    @GetMapping
+    @PreAuthorize("permitAll()")
+    @GetMapping("/category/{id}")
     public ResponseEntity<Page<ProductResponse>> getAllProductsByCategory(
-            @RequestParam(required = false) Long categoryId, Pageable pageable) {
+            @PathVariable("id") Long categoryId, Pageable pageable) {
         Page<ProductResponse> products = productService.getAllProductsByCategory(categoryId, pageable);
 
         return ResponseEntity.ok(products);
     }
 
+
+    @PreAuthorize("permitAll()")
+    @GetMapping("/")
+    public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
+        Page<ProductResponse> products = productService.getAllProducts(pageable);
+        return ResponseEntity.ok(products);
+    }
 
 
     @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
@@ -107,7 +114,7 @@ public class ProductController {
     }
 
     @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
-    @GetMapping("/sorted")
+    @GetMapping("/sort")
     public ResponseEntity<Page<ProductResponse>> getSortedProducts(
             @RequestParam(defaultValue = "") String sortBy, Pageable pageable) {
         Page<ProductResponse> sorted = productService.getAllSorted(sortBy, pageable);

@@ -32,8 +32,6 @@ public class ChapaRequest {
 
     @JsonProperty("phone_number")
     private String phoneNumber;
-
-    @NotBlank(message = "Transaction reference is required")
     @JsonProperty("tx_ref")
     private String txRef;
 

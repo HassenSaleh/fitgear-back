@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
     private final OrderService orderService;
 
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<Page<OrderResponse>> getAllOrders(Pageable pageable) {
         Page<OrderResponse> orders = orderService.getAllOrders(pageable);
         return ResponseEntity.ok(orders);
@@ -30,7 +30,7 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
-    @PostMapping
+    @PostMapping("/")
     public ResponseEntity<OrderResponse> placeOrder(@Valid @RequestBody PlaceOrderRequest request) {
         OrderResponse orderDto = orderService.placeOrder(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(orderDto);
