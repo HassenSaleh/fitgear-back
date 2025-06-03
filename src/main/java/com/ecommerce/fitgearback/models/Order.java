@@ -33,8 +33,8 @@ public class Order {
     private PaymentMethod paymentMethod;
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
+    @Column(name = "tx_ref")
     private String txRef;
-
     private LocalDateTime createdAt;
 
     @ManyToOne

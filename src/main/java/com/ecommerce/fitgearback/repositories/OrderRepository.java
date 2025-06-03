@@ -39,8 +39,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findByCustomerIdWithItems(@Param("customerId") Long customerId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"items.product"})
-    @Query("SELECT o FROM Order o WHERE o.id = :orderId")
-    Optional<Order> findByIdWithItems(@Param("orderId") Long orderId);
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items LEFT JOIN FETCH o.customer WHERE o.id = :id")
+    Optional<Order> findByIdWithItems(@Param("id") Long id);
 
     @EntityGraph(attributePaths = {"items.product"})
     @Query("SELECT o FROM Order o JOIN o.items i WHERE i.product.vendor.id = :vendorId")

@@ -1,6 +1,8 @@
 package com.ecommerce.fitgearback.Configurations;
 
 import com.ecommerce.fitgearback.filters.JwtAuthenticationFilter;
+import com.ecommerce.fitgearback.models.Customer;
+import com.ecommerce.fitgearback.repositories.CustomerRepository;
 import com.ecommerce.fitgearback.services.UserDetailService;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +19,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -31,6 +35,7 @@ public class SecurityConfig {
     private final UserDetailService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthenticationFilter authenticationFilter;
+    private final CustomerRepository customerRepository;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -79,5 +84,17 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return username -> {
+            Customer customer = customerRepository.findByEmail(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            return User.withUsername(customer.getEmail())
+                    .password(customer.getPassword())
+                    .roles("CUSTOMER")
+                    .build();
+        };
     }
 }

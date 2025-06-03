@@ -1,7 +1,6 @@
 package com.ecommerce.fitgearback.payment;
 
 import com.ecommerce.fitgearback.enums.OrderStatus;
-import com.ecommerce.fitgearback.enums.PaymentMethod;
 import com.ecommerce.fitgearback.enums.PaymentStatus;
 import com.ecommerce.fitgearback.models.Order;
 import com.ecommerce.fitgearback.repositories.OrderRepository;
@@ -16,9 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @PreAuthorize("hasRole('CUSTOMER')")
 @RestController
@@ -37,64 +34,71 @@ public class ChapaController {
         this.orderRepository = orderRepository;
     }
 
-
     @PostMapping("/initialize")
-    public ResponseEntity<ChapaResponse> initializePayment(@Valid @RequestBody ChapaRequest request) {
+    public ResponseEntity<ApiResponse<ChapaResponse>> initializePayment(@Valid @RequestBody ChapaRequest request) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String customerEmail = authentication.getName();
+            String customerEmail;
+            if (authentication.getPrincipal() instanceof JwtUserPrincipal) {
+                customerEmail = ((JwtUserPrincipal) authentication.getPrincipal()).getEmail();
+            } else {
+                customerEmail = authentication.getName();
+            }
+            logger.debug("Authenticated customer email: {}", customerEmail);
 
-            // Require orderId to ensure valid order context
+            logger.debug("Resolved customer email: {}", customerEmail);
+
             if (request.getOrderId() == null) {
+                logger.error("Order ID is required");
                 throw new IllegalArgumentException("Order ID is required");
             }
 
-            Order order = orderRepository.findByIdWithItems(request.getOrderId())
-                    .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + request.getOrderId()));
-
-            if (!order.getCustomer().getEmail().equals(customerEmail)) {
-                throw new IllegalArgumentException("Order does not belong to the authenticated customer");
+            Long orderId;
+            try {
+                orderId = request.getOrderId();
+            } catch (NumberFormatException e) {
+                logger.error("Invalid order ID format: {}", request.getOrderId());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>("error", "Invalid order ID format", null));
             }
 
-            // Ensure txRef is set
-            if (order.getTxRef() == null) {
-                order.setTxRef("tx-" + UUID.randomUUID());
-                order.setPaymentMethod(PaymentMethod.CHAPA);
-                order.setPaymentStatus(PaymentStatus.PENDING);
-                orderRepository.save(order);
+            Order order = orderRepository.findByIdWithItems(orderId)
+                    .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
+
+            if (order.getCustomer() == null || order.getCustomer().getEmail() == null) {
+                logger.error("Order {} has no associated customer", orderId);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>("error", "Order has no associated customer", null));
             }
 
-            // Set payment request details
-            request.setTxRef(order.getTxRef());
+            if (!order.getCustomer().getEmail().equalsIgnoreCase(customerEmail)) {
+                logger.error("Order does not belong to the authenticated customer. Order email: {}, Authenticated email: {}",
+                        order.getCustomer().getEmail(), customerEmail);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ApiResponse<>("error", "Order does not belong to the authenticated customer", null));
+            }
+
             request.setEmail(customerEmail);
             request.setCallbackUrl(callbackUrl);
             request.setReturnUrl(returnUrl);
-            if (request.getCustomization() == null) {
-                Map<String, String> customization = new HashMap<>();
-                customization.put("title", "Merchant Payment");
-                customization.put("description", "Order payment for ID: " + order.getId());
-                request.setCustomization(customization);
-            }
 
-
-            ChapaResponse response = chapaService.initializePayment(request);
-            logger.info("Payment initialized for order {} with txRef: {}", order.getId(), order.getTxRef());
-
-            return ResponseEntity.ok(response);
+            ChapaResponse response = chapaService.initializePayment(order, request);
+            logger.info("Payment initialized for order ID: {}", order.getId());
+            return ResponseEntity.ok(new ApiResponse<>("success", "Payment initialized", response));
         } catch (IllegalArgumentException e) {
-            //logger.error("Validation error for customer {}: {}", customerEmail, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ChapaResponse("failed", e.getMessage(), null));
+            logger.error("Validation error: {}", e.getMessage());
+            return ResponseEntity.status(e.getMessage().startsWith("Order not found") ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>("error", e.getMessage(), null));
         } catch (IOException e) {
-            //logger.error("Payment initialization failed for customer {}: {}", customerEmail, e.getMessage());
+            logger.error("Payment initialization failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ChapaResponse("failed", "Payment initialization failed: " + e.getMessage(), null));
+                    .body(new ApiResponse<>("error", "Payment initialization failed: " + e.getMessage(), null));
         }
     }
 
 
     @GetMapping("/verify/{txRef}")
-    public ResponseEntity<Boolean> verifyPayment(@PathVariable String txRef) {
+    public ResponseEntity<ApiResponse<Boolean>> verifyPayment(@PathVariable String txRef) {
         try {
             if (txRef == null || !txRef.startsWith("tx-")) {
                 throw new IllegalArgumentException("Invalid transaction reference");
@@ -109,13 +113,14 @@ public class ChapaController {
                 orderRepository.save(order);
                 logger.info("Payment verified for order {} (txRef: {})", order.getId(), txRef);
             }
-            return ResponseEntity.ok(verified);
+            return ResponseEntity.ok(new ApiResponse<>("success", "Payment verified", verified));
         } catch (IllegalArgumentException e) {
             logger.error("Verification error for txRef {}: {}", txRef, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new  ApiResponse<>("failed", e.getMessage(), null));
         } catch (IOException e) {
             logger.error("Payment verification failed for txRef {}: {}", txRef, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>("error", e.getMessage(), false));
         }
     }
 
@@ -130,11 +135,17 @@ public class ChapaController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid callback data");
         }
 
+
         Order order = orderRepository.findByTxRef(txRef)
                 .orElse(null);
         if (order == null) {
             logger.warn("No order found for txRef: {}", txRef);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found");
+        }
+
+        if (order.getPaymentStatus() != PaymentStatus.PENDING) {
+            logger.info("Callback already processed for txRef: {}", txRef);
+            return ResponseEntity.ok("Callback already processed");
         }
 
         if ("success".equalsIgnoreCase(status)) {

@@ -1,7 +1,13 @@
 package com.ecommerce.fitgearback.payment;
 
+import com.ecommerce.fitgearback.enums.PaymentMethod;
+import com.ecommerce.fitgearback.enums.PaymentStatus;
+import com.ecommerce.fitgearback.mappers.OrderMapper;
+import com.ecommerce.fitgearback.models.Order;
+import com.ecommerce.fitgearback.repositories.OrderRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +20,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -27,17 +34,35 @@ public class ChapaService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final OrderRepository orderRepository;
 
-    public ChapaService(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public ChapaService(RestTemplate restTemplate, ObjectMapper objectMapper,OrderRepository orderRepository) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.orderRepository = orderRepository;
         logger.info("ChapaService initialized");
     }
 
-    public ChapaResponse initializePayment(ChapaRequest paymentRequest) throws IOException {
+    @Transactional
+    public ChapaResponse initializePayment(Order order, ChapaRequest paymentRequest) throws IOException {
         if (secretKey == null || secretKey.isEmpty()) {
             logger.error("Chapa secret key is not configured");
             throw new IllegalStateException("Chapa secret key is not configured");
+        }
+
+        if (order.getTxRef() == null) {
+            order.setTxRef("tx-" + order.getId() + "-" + System.currentTimeMillis());
+            order.setPaymentMethod(PaymentMethod.CHAPA);
+            order.setPaymentStatus(PaymentStatus.PENDING);
+            orderRepository.save(order);
+        }
+
+        paymentRequest.setTxRef(order.getTxRef());
+        if (paymentRequest.getCustomization() == null) {
+            Map<String, String> customization = new HashMap<>();
+            customization.put("title", "Merchant Payment");
+            customization.put("description", "Order payment for ID: " + order.getId());
+            paymentRequest.setCustomization(customization);
         }
 
         String jsonBody;

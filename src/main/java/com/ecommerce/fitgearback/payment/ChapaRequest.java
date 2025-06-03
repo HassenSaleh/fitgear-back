@@ -48,7 +48,7 @@ public class ChapaRequest {
     private Map<String, String> customization;
     private Map<String, String> meta;
 
-    private Long orderId; // Add orderId to link payment to order
+    private Long orderId;
 
     public void setCustomization(Map<String, String> customization) {
         if (customization != null && customization.get("title") != null && customization.get("title").length() > 16) {
