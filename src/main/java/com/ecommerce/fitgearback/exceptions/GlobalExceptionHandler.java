@@ -1,5 +1,7 @@
 package com.ecommerce.fitgearback.exceptions;
 
+import com.ecommerce.fitgearback.dtos.others.ErrorDto;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -36,11 +38,6 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "Product not found", ex.getMessage());
     }
 
-    @ExceptionHandler(OrderNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleOrderNotFound(OrderNotFoundException ex) {
-        return buildErrorResponse(HttpStatus.NOT_FOUND, "Order not found", ex.getMessage());
-    }
-
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUsernameNotFound(UsernameNotFoundException ex) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "User not found", ex.getMessage());
@@ -53,33 +50,33 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(@NotNull IllegalArgumentException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid request", ex.getMessage());
     }
 
     @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<Map<String, Object>> handleNoSuchElement(NoSuchElementException ex) {
+    public ResponseEntity<Map<String, Object>> handleNoSuchElement(@NotNull NoSuchElementException ex) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "Resource not found", ex.getMessage());
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+    public ResponseEntity<Map<String, Object>> handleIllegalState(@NotNull IllegalStateException ex) {
 
         return buildErrorResponse(HttpStatus.NOT_FOUND, "Resource not found", ex.getMessage());
     }
 
     @ExceptionHandler(ImageProcessingException.class )
-    public ResponseEntity<Map<String, Object>> handleImageProcessing(ImageProcessingException ex) {
+    public ResponseEntity<Map<String, Object>> handleImageProcessing(@NotNull ImageProcessingException ex) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Image processing error", ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(@NotNull MethodArgumentTypeMismatchException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid parameter", "Invalid ID format: " + ex.getValue());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(@NotNull MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errors.put(error.getField(), error.getDefaultMessage());
@@ -93,12 +90,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NumberFormatException.class)
-    public ResponseEntity<Map<String, Object>> handleNumberFormat(NumberFormatException ex) {
+    public ResponseEntity<Map<String, Object>> handleNumberFormat(@NotNull NumberFormatException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid number format", ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+    public ResponseEntity<Map<String, Object>> handleGenericException(@NotNull Exception ex) {
         Map<String, Object> error = new HashMap<>();
         error.put("error", "Internal Server Error");
         error.put("message", "An unexpected error occurred: " + ex.getMessage());
@@ -115,18 +112,17 @@ public class GlobalExceptionHandler {
 
     }
 
-        @ExceptionHandler(HttpMessageNotReadableException.class)
-        public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "Bad Request");
-            error.put("message", "Customer signup request body is missing or invalid. Please provide a valid JSON with firstName, lastName, email, and password.");
-            error.put("timestamp", LocalDateTime.now().format(formatter));
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
-
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("error", "Bad Request");
+        error.put("message", "Customer signup request body is missing or invalid. Please provide a valid JSON with firstName, lastName, email, and password." + ex.getMessage());
+        error.put("timestamp", LocalDateTime.now().format(formatter));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(AccessDeniedException ex) {
+    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(@NotNull AccessDeniedException ex) {
         Map<String, Object> error = new HashMap<>();
         error.put("error", "Forbidden");
         error.put("message", ex.getMessage());
@@ -134,4 +130,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ErrorDto> handleOrderNotFound(@NotNull OrderNotFoundException ex) {
+        ErrorDto error = new ErrorDto(ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+}
