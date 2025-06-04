@@ -4,8 +4,6 @@ import com.ecommerce.fitgearback.dtos.admin.AdminRequest;
 import com.ecommerce.fitgearback.dtos.admin.AdminResponse;
 import com.ecommerce.fitgearback.dtos.login.JwtRequest;
 import com.ecommerce.fitgearback.dtos.signup.SignUpResponse;
-import com.ecommerce.fitgearback.dtos.vendor.VendorRequest;
-import com.ecommerce.fitgearback.dtos.vendor.VendorResponse;
 import com.ecommerce.fitgearback.services.AdminService;
 import com.ecommerce.fitgearback.services.AuthService;
 import jakarta.servlet.http.HttpServletResponse;

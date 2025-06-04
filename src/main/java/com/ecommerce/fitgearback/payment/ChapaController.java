@@ -79,8 +79,8 @@ public class ChapaController {
             }
 
             request.setEmail(customerEmail);
-            request.setCallbackUrl(callbackUrl);
-            request.setReturnUrl(returnUrl);
+            request.setCallbackUrl(request.getCallbackUrl());
+            request.setReturnUrl(request.getReturnUrl());
 
             ChapaResponse response = chapaService.initializePayment(order, request);
             logger.info("Payment initialized for order ID: {}", order.getId());

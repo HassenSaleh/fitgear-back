@@ -76,9 +76,6 @@ public class ProductService {
     public ProductResponse getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
-        if (product.getActive() != ProductStatus.ACTIVE) {
-            throw new ProductNotFoundException("Product is not active: ID " + id);
-        }
         return productMapper.toProductResponse(product);
     }
 

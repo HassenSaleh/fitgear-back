@@ -124,7 +124,6 @@ public class ProductController {
             @RequestParam(required = false) String priceRange, // e.g., "10-50"
             @RequestParam(required = false) Long categoryId,
             Pageable pageable) {
-        // Build filter parameters dynamically
         Map<String, Object> filters = new HashMap<>();
         if (priceRange != null && !priceRange.isEmpty()) {
             filters.put("priceRange", priceRange);
@@ -133,7 +132,6 @@ public class ProductController {
             filters.put("categoryId", categoryId);
         }
 
-        // Pass filters to service layer
         Page<ProductResponse> products = productService.filterProducts(filters, pageable);
         return ResponseEntity.ok(products);
     }

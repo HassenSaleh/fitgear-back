@@ -2,7 +2,6 @@ package com.ecommerce.fitgearback.controllers;
 
 import com.ecommerce.fitgearback.dtos.login.JwtRequest;
 import com.ecommerce.fitgearback.dtos.login.JwtResponse;
-import com.ecommerce.fitgearback.dtos.login.Response;
 import com.ecommerce.fitgearback.mappers.AdminMapper;
 import com.ecommerce.fitgearback.mappers.CustomerMapper;
 import com.ecommerce.fitgearback.mappers.VendorMapper;
@@ -20,7 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;

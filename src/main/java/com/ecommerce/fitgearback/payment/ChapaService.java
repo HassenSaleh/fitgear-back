@@ -126,20 +126,15 @@ public class ChapaService {
             logger.error("Payment already completed for order ID: {}", order.getId());
             throw new IllegalStateException("Payment already completed for this order");
         }
-        // Generate a new txRef if the existing one is used or not set
-        String newTxRef;
-        do {
-            newTxRef = "tx-" + order.getId() + "-" + UUID.randomUUID();
-        } while (orderRepository.findByTxRef(newTxRef).isPresent());
 
-        // Update the order with the new txRef
-        order.setTxRef(newTxRef);
+        order.setTxRef(paymentRequest.getTxRef());
         order.setPaymentMethod(PaymentMethod.CHAPA);
         order.setPaymentStatus(PaymentStatus.PENDING);
         orderRepository.save(order);
+       // paymentRequest.getTxId();
 
-        paymentRequest.setTxRef(newTxRef);
-        logger.debug("Using tx_ref: {}", newTxRef);
+        paymentRequest.setTxRef(paymentRequest.getTxRef());
+        logger.debug("Using tx_ref: {}", paymentRequest.getTxRef());
 
         if (paymentRequest.getCustomization() == null) {
             Map<String, String> customization = new HashMap<>();
