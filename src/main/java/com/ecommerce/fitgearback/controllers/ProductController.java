@@ -40,21 +40,18 @@ public class ProductController {
 
 
     @PreAuthorize("permitAll()")
-    @GetMapping("/")
     public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
         Page<ProductResponse> products = productService.getAllProducts(pageable);
         return ResponseEntity.ok(products);
     }
 
 
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
         ProductResponse product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
 
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
     @GetMapping("/vendor/{vendorId}")
     public ResponseEntity<Page<ProductResponse>> getProductsByVendorId(
             @PathVariable Long vendorId, Pageable pageable) {
@@ -62,7 +59,6 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
     @GetMapping("/search")
     public ResponseEntity<Page<ProductResponse>> searchProducts(
             @RequestParam String keyword, Pageable pageable) {
@@ -70,7 +66,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
     @GetMapping("/{id}/image")
     public ResponseEntity<Resource> getProductImage(@PathVariable Long id) {
         Product product = productService.getProductEntityById(id);
@@ -113,7 +108,6 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR')")
     @GetMapping("/sort")
     public ResponseEntity<Page<ProductResponse>> getSortedProducts(
             @RequestParam(defaultValue = "") String sortBy, Pageable pageable) {
