@@ -38,7 +38,7 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-
+    @GetMapping
     @PreAuthorize("permitAll()")
     public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
         Page<ProductResponse> products = productService.getAllProducts(pageable);
