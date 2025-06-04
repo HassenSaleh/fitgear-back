@@ -1,8 +1,12 @@
 package com.ecommerce.fitgearback.Configurations;
 
 import com.ecommerce.fitgearback.filters.JwtAuthenticationFilter;
+import com.ecommerce.fitgearback.models.Admin;
 import com.ecommerce.fitgearback.models.Customer;
+import com.ecommerce.fitgearback.models.Vendor;
+import com.ecommerce.fitgearback.repositories.AdminRepository;
 import com.ecommerce.fitgearback.repositories.CustomerRepository;
+import com.ecommerce.fitgearback.repositories.VendorRepository;
 import com.ecommerce.fitgearback.services.UserDetailService;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +31,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.Optional;
+
 @AllArgsConstructor
 @Configuration
 @EnableWebSecurity
@@ -36,6 +42,8 @@ public class SecurityConfig {
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthenticationFilter authenticationFilter;
     private final CustomerRepository customerRepository;
+    private final AdminRepository adminRepository;
+    private final VendorRepository vendorRepository;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -64,7 +72,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auths/login").permitAll()
                         .requestMatchers("/api/v1/auths/refresh").permitAll()
                         .requestMatchers("/api/v1/auths/test").permitAll()
-                        .requestMatchers("/api/v1/users/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -89,12 +96,28 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
-            Customer customer = customerRepository.findByEmail(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-            return User.withUsername(customer.getEmail())
-                    .password(customer.getPassword())
-                    .roles("CUSTOMER")
-                    .build();
+            Optional<Customer> customer = customerRepository.findByEmail(username);
+            if (customer.isPresent()) {
+                return User.withUsername(customer.get().getEmail())
+                        .password(customer.get().getPassword())
+                        .roles("CUSTOMER")
+                        .build();
+            }
+            Optional<Vendor> vendor = vendorRepository.findByEmail(username);
+            if (vendor.isPresent()) {
+                return User.withUsername(vendor.get().getEmail())
+                        .password(vendor.get().getPassword())
+                        .roles("VENDOR")
+                        .build();
+            }
+            Optional<Admin> admin = adminRepository.findByEmail(username);
+            if (admin.isPresent()) {
+                return User.withUsername(admin.get().getEmail())
+                        .password(admin.get().getPassword())
+                        .roles("ADMIN")
+                        .build();
+            }
+            throw new UsernameNotFoundException("User not found with email: " + username);
         };
     }
 }

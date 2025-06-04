@@ -80,6 +80,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
+
             if (email == null || role == null) {
                 LOGGER.warning("Missing email or role in claims");
                 sendUnauthorizedResponse(response, "Missing required claims");

@@ -18,6 +18,10 @@ public interface CartRepository extends JpaRepository<Cart,Long> {
     Optional<Cart> getCartWithItems(@Param("cartId") Long cartId);
 
 
+    @Query("SELECT c FROM Cart c JOIN FETCH c.items WHERE c.customer.email = :email")
+    Optional<Cart> findByCustomerEmail(@Param("email") String email);
+
+
     @EntityGraph(attributePaths = {"items.product"})
     Optional<Cart> findByCustomerId(Long customerId);
 
