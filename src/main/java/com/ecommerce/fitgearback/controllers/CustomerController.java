@@ -40,7 +40,6 @@ public class CustomerController {
     private final AuthService authService;
     private final ProductService productService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/")
     public ResponseEntity<Page<ProductResponse>> getAll(Pageable pageable) {
         Page<ProductResponse> products = productService.getAllProducts(pageable);

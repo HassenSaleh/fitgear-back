@@ -20,6 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @AllArgsConstructor
@@ -113,5 +115,26 @@ public class ProductController {
             @RequestParam(defaultValue = "") String sortBy, Pageable pageable) {
         Page<ProductResponse> sorted = productService.getAllSorted(sortBy, pageable);
         return ResponseEntity.ok(sorted);
+    }
+
+
+    @PreAuthorize("permitAll()")
+    @GetMapping("/filter")
+    public ResponseEntity<Page<ProductResponse>> filterProducts(
+            @RequestParam(required = false) String priceRange, // e.g., "10-50"
+            @RequestParam(required = false) Long categoryId,
+            Pageable pageable) {
+        // Build filter parameters dynamically
+        Map<String, Object> filters = new HashMap<>();
+        if (priceRange != null && !priceRange.isEmpty()) {
+            filters.put("priceRange", priceRange);
+        }
+        if (categoryId != null) {
+            filters.put("categoryId", categoryId);
+        }
+
+        // Pass filters to service layer
+        Page<ProductResponse> products = productService.filterProducts(filters, pageable);
+        return ResponseEntity.ok(products);
     }
 }

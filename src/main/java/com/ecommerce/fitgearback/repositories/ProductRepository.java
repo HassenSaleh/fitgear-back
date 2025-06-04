@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,10 +39,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @NotNull Optional<Product> findById(@NotNull Long productId);
 
-    @Query("SELECT p FROM Product p WHERE p.vendor.id = :vendorId AND p.active = :status")
+    @Query("SELECT p FROM Product p WHERE p.vendor.id = :vendorId")
     Page<Product> findByVendorId(@Param("vendorId") Long vendorId, Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.id IN :ids")
     List<Product> findAllByIdWithLock(@Param("ids") Set<Long> ids);
+
+    Page<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
+    Page<Product> findByPriceBetweenAndCategoryId(BigDecimal minPrice, BigDecimal maxPrice, Long categoryId, Pageable pageable);
 }

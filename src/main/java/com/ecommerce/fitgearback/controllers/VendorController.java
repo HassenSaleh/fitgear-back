@@ -129,7 +129,7 @@ public class VendorController {
 
             Page<ProductResponse> productResponses = productService.getAllProductsByVendor(vendorId,pageable);
 
-            // Return response
+
             if (productResponses.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }

@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -203,12 +204,8 @@ public class ProductService {
     }
 
     public Product getProductEntityById(Long id) {
-        Product product = productRepository.findById(id)
+        return productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
-        if (product.getActive() != ProductStatus.ACTIVE) {
-            throw new ProductNotFoundException("Product is not active: ID " + id);
-        }
-        return product;
     }
 
     private void validateProductRequest(ProductRequest request) {
@@ -258,5 +255,60 @@ public class ProductService {
             return "";
         }
         return filename.substring(filename.lastIndexOf('.') + 1);
+    }
+
+
+    public Page<ProductResponse> filterProducts(Map<String, Object> filters, Pageable pageable) {
+        // Initialize filter variables
+        BigDecimal minPrice = null;
+        BigDecimal maxPrice = null;
+        Long categoryId = null;
+
+        // Extract filters
+        if (filters.containsKey("priceRange")) {
+            String priceRange = (String) filters.get("priceRange");
+            if (priceRange != null && !priceRange.isEmpty()) {
+                try {
+                    String[] range = priceRange.split("-");
+                    if (range.length == 2) {
+                        minPrice = new BigDecimal(range[0].trim());
+                        maxPrice = new BigDecimal(range[1].trim());
+                    } else {
+                        minPrice = maxPrice = new BigDecimal(priceRange.trim());
+                    }
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Invalid priceRange format: " + priceRange);
+                }
+            }
+        }
+        if (filters.containsKey("categoryId")) {
+            categoryId = (Long) filters.get("categoryId");
+        }
+
+        // Call repository with dynamic filters
+        Page<Product> products;
+        if (minPrice != null && maxPrice != null && categoryId != null) {
+            products = productRepository.findByPriceBetweenAndCategoryId(minPrice, maxPrice, categoryId, pageable);
+        } else if (minPrice != null && maxPrice != null) {
+            products = productRepository.findByPriceBetween(minPrice, maxPrice, pageable);
+        } else if (categoryId != null) {
+            products = productRepository.findByCategoryId(categoryId, pageable);
+        } else {
+            products = productRepository.findAll(pageable);
+        }
+
+        // Map to ProductResponse
+        return products.map(this::mapToProductResponse);
+    }
+
+    
+    private ProductResponse mapToProductResponse(Product product) {
+        ProductResponse response = new ProductResponse();
+        response.setId(product.getId());
+        response.setName(product.getName());
+        response.setPrice(product.getPrice());
+        response.setCategoryId(product.getCategory().getId());
+        // Set other fields as needed
+        return response;
     }
 }
