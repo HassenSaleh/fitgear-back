@@ -121,10 +121,10 @@ public class ProductController {
     @PreAuthorize("permitAll()")
     @GetMapping
     public ResponseEntity<Page<ProductResponse>> filterProducts(
-            @RequestParam(required = false) String priceRange,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String brand,
-            @RequestParam(required = false) String name,
+            @RequestParam(required = false,name = "price") String priceRange,
+            @RequestParam(required = false,name = "category") Long categoryId,
+            @RequestParam(required = false,name = "brand") String brand,
+            @RequestParam(required = false,name = "name") String name,
             Pageable pageable) {
         Map<String, Object> filters = new HashMap<>();
         if (priceRange != null && !priceRange.isEmpty()) {
