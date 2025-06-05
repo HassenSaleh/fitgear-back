@@ -123,6 +123,8 @@ public class ProductController {
     public ResponseEntity<Page<ProductResponse>> filterProducts(
             @RequestParam(required = false) String priceRange,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) String name,
             Pageable pageable) {
         Map<String, Object> filters = new HashMap<>();
         if (priceRange != null && !priceRange.isEmpty()) {
@@ -130,6 +132,12 @@ public class ProductController {
         }
         if (categoryId != null) {
             filters.put("categoryId", categoryId);
+        }
+        if (brand != null && !brand.isEmpty()) {
+            filters.put("brand", brand);
+        }
+        if (name != null && !name.isEmpty()) {
+            filters.put("name", name);
         }
 
         Page<ProductResponse> products = productService.filterProducts(filters, pageable);

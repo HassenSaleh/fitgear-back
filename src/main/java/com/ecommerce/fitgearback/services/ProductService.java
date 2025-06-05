@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,10 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @AllArgsConstructor
 @Service
@@ -262,6 +260,8 @@ public class ProductService {
         BigDecimal minPrice = null;
         BigDecimal maxPrice = null;
         Long categoryId = null;
+        String brand = null;
+        String name = null;
 
 
         if (filters.containsKey("priceRange")) {
@@ -283,6 +283,12 @@ public class ProductService {
         if (filters.containsKey("categoryId")) {
             categoryId = (Long) filters.get("categoryId");
         }
+        if (filters.containsKey("brand")) {
+            brand = (String) filters.get("brand");
+        }
+        if (filters.containsKey("name")) {
+            name = (String) filters.get("name");
+        }
 
 //        if (filters.containsKey("categoryId")) {
 //            categoryId = (Long) filters.get("categoryId");
@@ -291,19 +297,29 @@ public class ProductService {
 //            }
 //        }
 
-
-        Page<Product> products;
-        if (minPrice != null && maxPrice != null && categoryId != null) {
-            products = productRepository.findByPriceBetweenAndCategoryId(minPrice, maxPrice, categoryId, pageable);
-        } else if (minPrice != null && maxPrice != null) {
-            products = productRepository.findByPriceBetween(minPrice, maxPrice, pageable);
-        } else if (categoryId != null) {
-            products = productRepository.findByCategoryId(categoryId, pageable);
-        } else {
-            products = productRepository.findAll(pageable);
+        List<Specification<Product>> specs = new ArrayList<>();
+        if (minPrice != null && maxPrice != null) {
+            BigDecimal finalMinPrice = minPrice;
+            BigDecimal finalMaxPrice = maxPrice;
+            specs.add((root, query, cb) -> cb.between(root.get("price"), finalMinPrice, finalMaxPrice));
+        }
+        if (categoryId != null) {
+            Long finalCategoryId = categoryId;
+            specs.add((root, query, cb) -> cb.equal(root.get("category").get("id"), finalCategoryId));
+        }
+        if (brand != null && !brand.isEmpty()) {
+            String finalBrand = brand;
+            specs.add((root, query, cb) -> cb.like(cb.lower(root.get("brand")), "%" + finalBrand.toLowerCase() + "%"));
+        }
+        if (name != null && !name.isEmpty()) {
+            String finalName = name;
+            specs.add((root, query, cb) -> cb.like(cb.lower(root.get("name")), "%" + finalName.toLowerCase() + "%"));
         }
 
+        Specification<Product> finalSpec = specs.stream()
+                .reduce((root, query, cb) -> cb.conjunction(), Specification::and);
 
+        Page<Product> products = productRepository.findAll(finalSpec, pageable);
         return products.map(this::mapToProductResponse);
     }
 
