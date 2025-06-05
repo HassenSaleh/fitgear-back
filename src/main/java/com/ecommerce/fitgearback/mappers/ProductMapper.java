@@ -6,6 +6,7 @@ import com.ecommerce.fitgearback.models.Category;
 import com.ecommerce.fitgearback.models.Product;
 import com.ecommerce.fitgearback.models.Vendor;
 import org.mapstruct.*;
+import org.springframework.data.domain.Page;
 
 import java.util.Base64;
 import java.util.List;
@@ -22,6 +23,9 @@ public interface ProductMapper {
 
     List<ProductResponse> toProductResponseList(List<Product> products);
 
+    default Page<ProductResponse> toProductResponsePage(Page<Product> products) {
+        return products.map(this::toProductResponse);
+    }
     @Mapping(target = "vendor", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

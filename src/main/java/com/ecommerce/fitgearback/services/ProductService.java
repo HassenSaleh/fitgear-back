@@ -51,13 +51,14 @@ public class ProductService {
     private final AuthService authService;
 
     public Page<ProductResponse> getAllProductsByCategory(Long categoryId, Pageable pageable) {
+
         if (categoryId != null && !categoryRepository.existsById(categoryId)) {
             logger.warn("Category ID {} does not exist", categoryId);
             throw new IllegalArgumentException("Category not found with ID: " + categoryId);
         }
         Page<Product> products = categoryId != null
                 ? productRepository.findByCategoryId(categoryId, pageable)
-                : productRepository.findAllWithCategory(pageable);
+                : productRepository.findAll(pageable);
         return products.map(productMapper::toProductResponse);
     }
 
@@ -282,6 +283,13 @@ public class ProductService {
         if (filters.containsKey("categoryId")) {
             categoryId = (Long) filters.get("categoryId");
         }
+
+//        if (filters.containsKey("categoryId")) {
+//            categoryId = (Long) filters.get("categoryId");
+//            if (categoryId != null && !categoryRepository.existsById(categoryId)) {
+//                throw new IllegalArgumentException("Category with ID " + categoryId + " does not exist.");
+//            }
+//        }
 
 
         Page<Product> products;

@@ -2,13 +2,11 @@ package com.ecommerce.fitgearback.repositories;
 
 import com.ecommerce.fitgearback.models.Product;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -23,13 +21,15 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId")
     Page<Product> findByCategoryId(@Param("categoryId") Long categoryId,Pageable pageable);
 
+    @EntityGraph(attributePaths = "category")
+    @QueryHints(@QueryHint(name = "org.hibernate.cacheable", value = "true"))
     @NotNull Page<Product> findAll(@NotNull Pageable pageable);
 
     @EntityGraph(attributePaths = "category")
     @Query("SELECT p FROM Product p WHERE p.category = :categorId")
     Page<Product> findAllWithCategory(Pageable pageable);
 
-    @Query("SELECT p FROM Product p WHERE p.active = :status AND " +
+    @Query("SELECT p FROM Product p WHERE" +
             "(p.brand IS NOT NULL AND LOWER(p.brand) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
             "(p.description IS NOT NULL AND LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
             "(p.name IS NOT NULL AND LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
@@ -37,6 +37,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Long countByVendorId(Long vendorId);
 
+
+    @EntityGraph(attributePaths = "category")
     @NotNull Optional<Product> findById(@NotNull Long productId);
 
     @Query("SELECT p FROM Product p WHERE p.vendor.id = :vendorId")

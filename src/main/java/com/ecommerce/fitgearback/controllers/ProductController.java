@@ -40,12 +40,12 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @PreAuthorize("permitAll()")
-    @GetMapping
-    public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
-        Page<ProductResponse> products = productService.getAllProducts(pageable);
-        return ResponseEntity.ok(products);
-    }
+//    @PreAuthorize("permitAll()")
+//    @GetMapping
+//    public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
+//        Page<ProductResponse> products = productService.getAllProducts(pageable);
+//        return ResponseEntity.ok(products);
+//    }
 
 
     @GetMapping("/{id}")
@@ -119,7 +119,7 @@ public class ProductController {
 
 
     @PreAuthorize("permitAll()")
-    @GetMapping("/filter")
+    @GetMapping
     public ResponseEntity<Page<ProductResponse>> filterProducts(
             @RequestParam(required = false) String priceRange,
             @RequestParam(required = false) Long categoryId,
