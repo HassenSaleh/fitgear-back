@@ -12,6 +12,7 @@ import com.ecommerce.fitgearback.models.Vendor;
 import com.ecommerce.fitgearback.repositories.CategoryRepository;
 import com.ecommerce.fitgearback.repositories.ProductRepository;
 import lombok.AllArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -255,13 +256,13 @@ public class ProductService {
     }
 
 
-    public Page<ProductResponse> filterProducts(Map<String, Object> filters, Pageable pageable) {
-        // Initialize filter variables
+    public Page<ProductResponse> filterProducts(@NotNull Map<String, Object> filters, Pageable pageable) {
+
         BigDecimal minPrice = null;
         BigDecimal maxPrice = null;
         Long categoryId = null;
 
-        // Extract filters
+
         if (filters.containsKey("priceRange")) {
             String priceRange = (String) filters.get("priceRange");
             if (priceRange != null && !priceRange.isEmpty()) {
@@ -282,7 +283,7 @@ public class ProductService {
             categoryId = (Long) filters.get("categoryId");
         }
 
-        // Call repository with dynamic filters
+
         Page<Product> products;
         if (minPrice != null && maxPrice != null && categoryId != null) {
             products = productRepository.findByPriceBetweenAndCategoryId(minPrice, maxPrice, categoryId, pageable);
