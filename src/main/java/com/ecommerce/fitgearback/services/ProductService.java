@@ -320,16 +320,23 @@ public class ProductService {
                 .reduce((root, query, cb) -> cb.conjunction(), Specification::and);
 
         Page<Product> products = productRepository.findAll(finalSpec, pageable);
-        return products.map(this::mapToProductResponse);
+        return productMapper.toProductResponsePage(products);
     }
 
     
-    private ProductResponse mapToProductResponse(Product product) {
-        ProductResponse response = new ProductResponse();
-        response.setId(product.getId());
-        response.setName(product.getName());
-        response.setPrice(product.getPrice());
-        response.setCategoryId(product.getCategory().getId());
-        return response;
-    }
+//    private ProductResponse mapToProductResponse(Product product) {
+//        ProductResponse response = new ProductResponse();
+//        response.setId(product.getId());
+//        response.setName(product.getName());
+//        response.setPrice(product.getPrice());
+//        response.setCategoryId(product.getCategory().getId());
+//        response.setBrand(product.getBrand());
+//        response.setCategoryName(product.getCategory().getName());
+//        response.setVendorId(product.getVendor().getId());
+//        response.setCreatedAt(product.getCreatedAt());
+//        //response.setImageUrl(product.getIma);
+//        return response;
+//    }
+
+
 }

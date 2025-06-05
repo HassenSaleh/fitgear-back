@@ -7,6 +7,7 @@ import com.ecommerce.fitgearback.models.Product;
 import com.ecommerce.fitgearback.models.Vendor;
 import org.mapstruct.*;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Base64;
 import java.util.List;
@@ -34,6 +35,7 @@ public interface ProductMapper {
     @Mapping(target = "imageType", ignore = true)
     @Mapping(target = "active", source = "status")
     Product toProduct(ProductRequest productRequest);
+
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "vendor", ignore = true)
