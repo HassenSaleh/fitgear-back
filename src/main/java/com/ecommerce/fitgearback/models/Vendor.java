@@ -33,7 +33,7 @@ public class Vendor implements JwtUser {
 
     @Column(nullable = false,name = "company_name")
     private String companyName;
-    @Column(name = "company_ddress")
+    @Column(name = "company_address")
     private String companyAddress;
     @Column(name = "company_number")
     private String contactNumber;

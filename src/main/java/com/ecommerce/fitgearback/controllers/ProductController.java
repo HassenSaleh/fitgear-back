@@ -40,8 +40,8 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping
     @PreAuthorize("permitAll()")
+    @GetMapping
     public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
         Page<ProductResponse> products = productService.getAllProducts(pageable);
         return ResponseEntity.ok(products);
@@ -121,7 +121,7 @@ public class ProductController {
     @PreAuthorize("permitAll()")
     @GetMapping("/filter")
     public ResponseEntity<Page<ProductResponse>> filterProducts(
-            @RequestParam(required = false) String priceRange, // e.g., "10-50"
+            @RequestParam(required = false) String priceRange,
             @RequestParam(required = false) Long categoryId,
             Pageable pageable) {
         Map<String, Object> filters = new HashMap<>();

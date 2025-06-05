@@ -20,13 +20,13 @@ import java.util.Set;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
     @EntityGraph(attributePaths = "category")
-    @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.active = :status")
+    @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId")
     Page<Product> findByCategoryId(@Param("categoryId") Long categoryId,Pageable pageable);
 
     @NotNull Page<Product> findAll(@NotNull Pageable pageable);
 
     @EntityGraph(attributePaths = "category")
-    @Query("SELECT p FROM Product p WHERE p.active = :status")
+    @Query("SELECT p FROM Product p WHERE p.category = :categorId")
     Page<Product> findAllWithCategory(Pageable pageable);
 
     @Query("SELECT p FROM Product p WHERE p.active = :status AND " +

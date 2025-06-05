@@ -6,7 +6,6 @@ import com.ecommerce.fitgearback.dtos.product.ProductResponse;
 import com.ecommerce.fitgearback.dtos.signup.SignUpResponse;
 import com.ecommerce.fitgearback.dtos.vendor.*;
 import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
-import com.ecommerce.fitgearback.models.Product;
 import com.ecommerce.fitgearback.services.AuthService;
 import com.ecommerce.fitgearback.services.ProductService;
 import com.ecommerce.fitgearback.services.VendorService;

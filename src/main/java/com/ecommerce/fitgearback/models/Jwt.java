@@ -3,9 +3,7 @@ package com.ecommerce.fitgearback.models;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Getter;import lombok.Setter;
 
 import javax.crypto.SecretKey;
 import java.util.Date;

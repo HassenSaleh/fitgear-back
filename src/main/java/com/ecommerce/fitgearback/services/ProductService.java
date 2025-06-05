@@ -294,7 +294,7 @@ public class ProductService {
             products = productRepository.findAll(pageable);
         }
 
-        // Map to ProductResponse
+
         return products.map(this::mapToProductResponse);
     }
 
@@ -305,7 +305,6 @@ public class ProductService {
         response.setName(product.getName());
         response.setPrice(product.getPrice());
         response.setCategoryId(product.getCategory().getId());
-        // Set other fields as needed
         return response;
     }
 }
