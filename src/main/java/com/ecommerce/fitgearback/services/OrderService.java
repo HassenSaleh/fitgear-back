@@ -179,7 +179,7 @@ public class OrderService {
 
     public Page<OrderResponse> getOrdersByVendorId(Long vendorId, Pageable pageable) {
         Vendor currentVendor = authService.getCurrentVendor();
-        if (!currentVendor.getId().equals(vendorId) && !authService.getCurrentAdmin().getRoleNames().contains("ADMIN")) {
+        if (!currentVendor.getId().equals(vendorId) ) {
             throw new AccessDeniedException("You can only view your own orders.");
         }
         Page<Order> orders = orderRepository.findByProductsVendorId(vendorId, pageable);
@@ -205,3 +205,4 @@ public class OrderService {
         productRepository.saveAll(products);
     }
 }
+//&& !authService.getCurrentAdmin().getRoleNames().contains("ADMIN")
