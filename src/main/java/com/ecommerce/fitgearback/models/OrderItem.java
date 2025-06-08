@@ -22,11 +22,11 @@ public class OrderItem {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
+    @JoinColumn(name = "order_id", nullable = false, foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE"))
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE"))
     private Product product;
 
     @Column(nullable = false)
@@ -35,7 +35,7 @@ public class OrderItem {
     @Column(nullable = false)
     private BigDecimal priceAtOrder;
 
-    private BigDecimal totalPrice ;
+    private BigDecimal totalPrice;
 
     public OrderItem(Order order, @NotNull Product product, int quantity) {
         if (product == null) {

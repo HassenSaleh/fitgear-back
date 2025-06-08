@@ -15,8 +15,10 @@ public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(nullable = false, unique = true)
-    private String name;  // e.g. "ADMIN", "CUSTOMER", "VENDOR"
+    private String name; // e.g. "ADMIN", "CUSTOMER", "VENDOR"
+
     @ManyToMany(mappedBy = "roles")
     @JsonIgnore
     private Set<Customer> customers;

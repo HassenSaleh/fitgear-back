@@ -12,8 +12,8 @@ import com.ecommerce.fitgearback.repositories.CustomerRepository;
 import com.ecommerce.fitgearback.repositories.OrderRepository;
 import com.ecommerce.fitgearback.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -48,7 +48,6 @@ public class OrderService {
         return txRef;
     }
 
-
     public Page<OrderResponse> getAllOrders(Pageable pageable) {
         Customer customer = authService.getCurrentCustomer();
         Page<Order> orders = orderRepository.findByCustomerEmail(customer.getEmail(), pageable);
@@ -78,7 +77,6 @@ public class OrderService {
             throw new IllegalArgumentException("No products specified in the order.");
         }
 
-        // Flatten List<Map<Long, Integer>> into Map<Long, Integer>, summing quantities for duplicate product IDs
         Map<Long, Integer> productQuantities = productQuantitiesList.stream()
                 .flatMap(map -> map.entrySet().stream())
                 .collect(Collectors.toMap(
@@ -96,11 +94,7 @@ public class OrderService {
         order.setPaymentStatus(PaymentStatus.PENDING);
         order.setCreatedAt(LocalDateTime.now());
 
-        // Generate unique txRef
-        String newTxRef;
-        do {
-            newTxRef = "tx-" + UUID.randomUUID();
-        } while (orderRepository.findByTxRef(newTxRef).isPresent());
+        String newTxRef = generateUniqueTxRef();
         order.setTxRef(newTxRef);
 
         List<OrderItem> orderItems = productQuantities.entrySet().stream()
@@ -150,7 +144,6 @@ public class OrderService {
         order.setPaymentStatus(PaymentStatus.PENDING);
         order.setCreatedAt(LocalDateTime.now());
 
-
         order.setTxRef(generateUniqueTxRef());
 
         List<OrderItem> orderItems = cart.getItems().stream()
@@ -189,7 +182,7 @@ public class OrderService {
         if (!currentVendor.getId().equals(vendorId) && !authService.getCurrentAdmin().getRoleNames().contains("ADMIN")) {
             throw new AccessDeniedException("You can only view your own orders.");
         }
-        Page<Order> orders = orderRepository.findByProductsVendorId(vendorId, pageable);
+        Page<Order> orders = orderRepository.findByItemsProductVendorId(vendorId, pageable);
         return orders.map(orderMapper::toOrderResponse);
     }
 

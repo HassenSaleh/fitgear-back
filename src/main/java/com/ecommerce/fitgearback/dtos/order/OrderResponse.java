@@ -1,5 +1,8 @@
 package com.ecommerce.fitgearback.dtos.order;
 
+import com.ecommerce.fitgearback.enums.OrderStatus;
+import com.ecommerce.fitgearback.enums.PaymentMethod;
+import com.ecommerce.fitgearback.models.Payment;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,11 +19,10 @@ import java.util.List;
 public class OrderResponse {
     private Long id;
     private Long customerId;
-    private Long vendorId;
     private List<OrderItemResponse> items;
     private BigDecimal totalPrice;
-    private String status;
+    private OrderStatus status;
     private LocalDateTime orderDate;
     private String shippingAddress;
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
 }

@@ -59,4 +59,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByTxRef(String txRef);
     @Query("SELECT o FROM Order o JOIN FETCH o.items WHERE o.customer.email = :email")
     Page<Order> findByCustomerEmail(@Param("email") String email, Pageable pageable);
+
+    @Query("SELECT o FROM Order o JOIN o.items oi JOIN oi.product p WHERE p.vendor.id = :vendorId")
+    Page<Order> findByItemsProductVendorId(Long vendorId, Pageable pageable);
 }

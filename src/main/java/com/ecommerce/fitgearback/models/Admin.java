@@ -18,15 +18,15 @@ public class Admin implements JwtUser {
     @Column(name = "id")
     private Long id;
 
-    @Column(nullable = false,name = "first_name")
+    @Column(nullable = false, name = "first_name")
     private String firstName;
-    @Column(nullable = false,name = "last_name")
+    @Column(nullable = false, name = "last_name")
     private String lastName;
 
-    @Column(nullable = false, unique = true,name = "email")
+    @Column(nullable = false, unique = true, name = "email")
     private String email;
 
-    @Column(nullable = false,name = "password")
+    @Column(nullable = false, name = "password")
     private String password;
 
     @Column(name = "department")
@@ -35,8 +35,8 @@ public class Admin implements JwtUser {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "admin_roles",
-            joinColumns = @JoinColumn(name = "admin_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
+            joinColumns = @JoinColumn(name = "admin_id", foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE")),
+            inverseJoinColumns = @JoinColumn(name = "role_id", foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE"))
     )
     @JsonIgnore
     private Set<Role> roles;
@@ -65,6 +65,7 @@ public class Admin implements JwtUser {
     public String getLastName() {
         return lastName;
     }
+
     public List<String> getRoleNames() {
         return roles.stream().map(Role::getName).toList();
     }

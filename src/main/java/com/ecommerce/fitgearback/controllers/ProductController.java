@@ -39,15 +39,6 @@ public class ProductController {
 
         return ResponseEntity.ok(products);
     }
-
-//    @PreAuthorize("permitAll()")
-//    @GetMapping
-//    public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
-//        Page<ProductResponse> products = productService.getAllProducts(pageable);
-//        return ResponseEntity.ok(products);
-//    }
-
-
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
         ProductResponse product = productService.getProductById(id);

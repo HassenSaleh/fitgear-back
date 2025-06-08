@@ -38,7 +38,8 @@ public class Order {
     private LocalDateTime createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id")
+    @JoinColumn(name = "customer_id", foreignKey =
+    @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE"))
     private Customer customer;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -47,11 +48,6 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     @ToString.Exclude
     private Payment payment;
-
-    private BigDecimal totalPrice;
-
-    @ManyToOne
-    private Vendor vendor;
 
     @PrePersist
     public void prePersist() {
@@ -65,6 +61,7 @@ public class Order {
             this.items.addAll(items);
         }
     }
+
     public boolean isPlacedBy(Customer customer) {
         return this.customer.equals(customer);
     }

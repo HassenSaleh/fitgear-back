@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
+@PreAuthorize("hasAnyRole('CUSTOMER','VENDOR')")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @AllArgsConstructor
 @RestController
@@ -47,14 +47,14 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderDto);
     }
 
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','VENDOR')")
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<Page<OrderResponse>> getOrdersByCustomerId(@PathVariable Long customerId, Pageable pageable) {
         Page<OrderResponse> orders = orderService.getOrdersByCustomerId(customerId, pageable);
         return ResponseEntity.ok(orders);
     }
 
-    @PreAuthorize("hasAnyRole('VENDOR', 'ADMIN')")
+    @PreAuthorize("hasRole('VENDOR')")
     @GetMapping("/vendor/{vendorId}")
     public ResponseEntity<Page<OrderResponse>> getOrdersByVendorId(@PathVariable Long vendorId, Pageable pageable) {
         Page<OrderResponse> orders = orderService.getOrdersByVendorId(vendorId, pageable);

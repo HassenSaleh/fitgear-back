@@ -57,8 +57,8 @@ public class Customer implements JwtUser {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "customer_roles",
-            joinColumns = @JoinColumn(name = "customer_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
+            joinColumns = @JoinColumn(name = "customer_id", foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE")),
+            inverseJoinColumns = @JoinColumn(name = "role_id", foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE"))
     )
     @JsonIgnore
     private Set<Role> roles;

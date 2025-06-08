@@ -20,7 +20,7 @@ public class Cart {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JoinColumn(name = "customer_id", nullable = false, foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE"))
     private Customer customer;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -32,7 +32,7 @@ public class Cart {
             cartItem.setQuantity(cartItem.getQuantity() + quantity);
             return cartItem;
         }
-        cartItem = new CartItem(this , product, quantity);
+        cartItem = new CartItem(this, product, quantity);
         items.add(cartItem);
         return cartItem;
     }

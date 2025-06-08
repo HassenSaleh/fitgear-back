@@ -3,7 +3,6 @@ package com.ecommerce.fitgearback.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.List;
 import java.util.Set;
 
@@ -19,19 +18,19 @@ public class Vendor implements JwtUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false,name = "first_name")
+    @Column(nullable = false, name = "first_name")
     private String firstName;
 
-    @Column(nullable = false,name = "last_name")
+    @Column(nullable = false, name = "last_name")
     private String lastName;
 
-    @Column(nullable = false, unique = true,name = "email")
+    @Column(nullable = false, unique = true, name = "email")
     private String email;
 
-    @Column(nullable = false,name = "password")
+    @Column(nullable = false, name = "password")
     private String password;
 
-    @Column(nullable = false,name = "company_name")
+    @Column(nullable = false, name = "company_name")
     private String companyName;
     @Column(name = "company_address")
     private String companyAddress;
@@ -41,15 +40,14 @@ public class Vendor implements JwtUser {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "vendor_roles",
-            joinColumns = @JoinColumn(name = "vendor_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
+            joinColumns = @JoinColumn(name = "vendor_id", foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (vendor_id) REFERENCES vendors(id) ON DELETE CASCADE")),
+            inverseJoinColumns = @JoinColumn(name = "role_id", foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE"))
     )
     @JsonIgnore
     private Set<Role> roles;
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Order> orders;
-
+    private List<Product> products;
 
     @Override
     public Long getId() {
@@ -75,9 +73,6 @@ public class Vendor implements JwtUser {
     public String getLastName() {
         return lastName;
     }
-
-    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Product> products;
 
     public List<String> getRoleNames() {
         return roles.stream().map(Role::getName).toList();
