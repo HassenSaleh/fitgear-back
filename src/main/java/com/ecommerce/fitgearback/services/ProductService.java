@@ -24,7 +24,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -68,6 +67,10 @@ public class ProductService {
     public Page<ProductResponse> getAllProductsByVendor(Long vendorId, Pageable pageable) {
         if (vendorId == null) {
             throw new IllegalArgumentException("Vendor ID is required");
+        }
+        Vendor currentVendor = authService.getCurrentVendor();
+        if (!currentVendor.getId().equals(vendorId)) {
+            throw new AccessDeniedException("You can only view your own orders.");
         }
         Page<Product> products = productRepository.findByVendorId(vendorId, pageable);
         return products.map(productMapper::toProductResponse);
@@ -322,21 +325,4 @@ public class ProductService {
         Page<Product> products = productRepository.findAll(finalSpec, pageable);
         return productMapper.toProductResponsePage(products);
     }
-
-    
-//    private ProductResponse mapToProductResponse(Product product) {
-//        ProductResponse response = new ProductResponse();
-//        response.setId(product.getId());
-//        response.setName(product.getName());
-//        response.setPrice(product.getPrice());
-//        response.setCategoryId(product.getCategory().getId());
-//        response.setBrand(product.getBrand());
-//        response.setCategoryName(product.getCategory().getName());
-//        response.setVendorId(product.getVendor().getId());
-//        response.setCreatedAt(product.getCreatedAt());
-//        //response.setImageUrl(product.getIma);
-//        return response;
-//    }
-
-
 }

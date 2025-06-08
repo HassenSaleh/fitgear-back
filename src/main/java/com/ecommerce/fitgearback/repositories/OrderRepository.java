@@ -16,6 +16,9 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
+    @EntityGraph(attributePaths = {"items.product"})
+    Page<Order> findByCustomerId(Long customerId, Pageable pageable);
+
     @Query("""
         SELECT COUNT(DISTINCT o.customer.id)
         FROM Order o

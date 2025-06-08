@@ -7,7 +7,6 @@ import java.util.Map;
 
 @Data
 public class PlaceOrderRequest {
-    private List<Long> productIds;
     private String shippingAddress;
     private PaymentMethod paymentMethod;
     private List<Map<Long, Integer>> productQuantities;

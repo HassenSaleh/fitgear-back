@@ -11,12 +11,11 @@ import org.jetbrains.annotations.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -29,6 +28,7 @@ public class  CustomerService {
     private final PasswordEncoder passwordEncoder;
     private final CustomerMapper customerMapper;
     private final RoleRepository roleRepository;
+    private final AuthService authService;
 
     public CustomerResponse sign(@NotNull CustomerRequest request) {
         Customer customer = customerMapper.toCustomer(request);
@@ -63,6 +63,10 @@ public class  CustomerService {
 
 
     public CustomerResponse getCustomerById(Long id) {
+        Customer currentVendor = authService.getCurrentCustomer();
+        if (!currentVendor.getId().equals(id)) {
+            throw new AccessDeniedException("You can only view your own orders.");
+        }
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + id));
         return customerMapper.toResponse(customer);

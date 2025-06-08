@@ -12,7 +12,10 @@ import java.math.BigDecimal;
 public class OrderItemResponse {
     private Long id;
     private Long productId;
-    private Long vendorId;
-    private Integer quantity;
+    private String productName;
     private BigDecimal price;
+    private Integer quantity;
+    private String description;
+    private Integer stock;
+    private Long vendorId;
 }

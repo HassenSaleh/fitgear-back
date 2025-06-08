@@ -182,7 +182,7 @@ public class OrderService {
         if (!currentVendor.getId().equals(vendorId) && !authService.getCurrentAdmin().getRoleNames().contains("ADMIN")) {
             throw new AccessDeniedException("You can only view your own orders.");
         }
-        Page<Order> orders = orderRepository.findByItemsProductVendorId(vendorId, pageable);
+        Page<Order> orders = orderRepository.findByProductsVendorId(vendorId, pageable);
         return orders.map(orderMapper::toOrderResponse);
     }
 

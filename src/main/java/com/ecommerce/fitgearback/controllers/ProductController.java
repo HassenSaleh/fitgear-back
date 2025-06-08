@@ -39,12 +39,14 @@ public class ProductController {
 
         return ResponseEntity.ok(products);
     }
+    @PreAuthorize("permitAll()")
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
         ProductResponse product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
 
+    @PreAuthorize("hasRole('VENDOR')")
     @GetMapping("/vendor/{vendorId}")
     public ResponseEntity<Page<ProductResponse>> getProductsByVendorId(
             @PathVariable Long vendorId, Pageable pageable) {
@@ -52,6 +54,7 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
+    @PreAuthorize("permitAll()")
     @GetMapping("/search")
     public ResponseEntity<Page<ProductResponse>> searchProducts(
             @RequestParam String keyword, Pageable pageable) {
@@ -101,6 +104,7 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("permitAll()")
     @GetMapping("/sort")
     public ResponseEntity<Page<ProductResponse>> getSortedProducts(
             @RequestParam(defaultValue = "") String sortBy, Pageable pageable) {

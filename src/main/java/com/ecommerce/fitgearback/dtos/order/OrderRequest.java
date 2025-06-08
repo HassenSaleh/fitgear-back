@@ -15,7 +15,6 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderRequest {
     private Long customerId;
-    private Long vendorId;
     private List<OrderItemRequest> items;
     private String shippingAddress;
     private PaymentMethod paymentMethod;

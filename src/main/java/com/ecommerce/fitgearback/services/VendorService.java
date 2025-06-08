@@ -4,8 +4,6 @@ import com.ecommerce.fitgearback.dtos.vendor.*;
 import com.ecommerce.fitgearback.exceptions.ResourceNotFoundException;
 import com.ecommerce.fitgearback.mappers.OrderMapper;
 import com.ecommerce.fitgearback.mappers.VendorMapper;
-import com.ecommerce.fitgearback.models.Customer;
-import com.ecommerce.fitgearback.models.Order;
 import com.ecommerce.fitgearback.models.Role;
 import com.ecommerce.fitgearback.models.Vendor;
 import com.ecommerce.fitgearback.repositories.*;
@@ -14,16 +12,15 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Setter
@@ -39,6 +36,7 @@ public class VendorService {
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
+    private final AuthService authService;
 
     @Transactional
     public VendorResponse sign(VendorRequest vendorRequest) {
@@ -49,12 +47,6 @@ public class VendorService {
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         vendor.setRoles(Collections.singleton(vendorRole));
         Vendor savedVendor = vendorRepository.save(vendor);
-//        Vendor ven = vendorRepository.findById(dto.getVendorId()).orElseThrow(...);
-//        Customer customer = customerRepository.findById(dto.getCustomerId()).orElseThrow(...);
-//
-//        Order order = orderMapper.toOrder(dto);
-//        order.setVendor(vendor);
-//        order.setCustomer(customer);
 
         return vendorMapper.toResponse(savedVendor);
     }
@@ -104,6 +96,10 @@ public class VendorService {
     }
 
     public VendorDashboardResponse getDashboard(Long vendorId) {
+        Vendor currentVendor = authService.getCurrentVendor();
+        if (!currentVendor.getId().equals(vendorId)) {
+            throw new AccessDeniedException("You can only view your own orders.");
+        }
         long totalOrders = orderRepository.countOrdersByVendorId(vendorId);
         long totalCustomers = orderRepository.countDistinctCustomersByVendorId(vendorId);
         long totalProducts = productRepository.countByVendorId(vendorId);
@@ -111,5 +107,4 @@ public class VendorService {
 
         return new VendorDashboardResponse(totalOrders, totalCustomers, totalProducts, totalRevenue);
     }
-
 }
