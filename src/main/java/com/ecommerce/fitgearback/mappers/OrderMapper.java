@@ -21,11 +21,11 @@ public interface OrderMapper {
     OrderResponse toOrderResponse(Order order);
 
     @Mapping(source = "product.id", target = "productId")
-    @Mapping(source = "product.name", target = "productName")
-    @Mapping(source = "product.price", target = "price")
+    @Mapping(source = "product.name", target = "productName", defaultValue = "Deleted Product")
+    @Mapping(source = "product.price", target = "price", defaultValue = "0.00")
     @Mapping(source = "quantity", target = "quantity")
-    @Mapping(source = "product.description", target = "description")
-    @Mapping(source = "product.stock", target = "stock")
-    @Mapping(source = "product.vendor.id", target = "vendorId")
+    @Mapping(source = "product.description", target = "description", defaultValue = "Product no longer available")
+    @Mapping(source = "product.stock", target = "stock", defaultValue = "0")
+    //@Mapping(source = "product.vendor.id", target = "vendorId", defaultValue = "0")
     OrderItemResponse toOrderItemResponse(OrderItem orderItem);
 }

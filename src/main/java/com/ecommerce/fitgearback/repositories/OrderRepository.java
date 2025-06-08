@@ -45,10 +45,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items LEFT JOIN FETCH o.customer WHERE o.id = :id")
     Optional<Order> findByIdWithItems(@Param("id") Long id);
 
-    @EntityGraph(attributePaths = {"items.product"})
-    @Query("SELECT o FROM Order o JOIN o.items i WHERE i.product.vendor.id = :vendorId")
+    @Query("SELECT DISTINCT o FROM Order o " +
+            "LEFT JOIN o.items oi " +
+            "LEFT JOIN oi.product p " +
+            "WHERE p.vendor.id = :vendorId OR (oi.product IS NULL AND EXISTS " +
+            "(SELECT 1 FROM OrderItem oi2 WHERE oi2.order = o AND oi2.product.id IN " +
+            "(SELECT p2.id FROM Product p2 WHERE p2.vendor.id = :vendorId)))")
     Page<Order> findByProductsVendorId(@Param("vendorId") Long vendorId, Pageable pageable);
-
     @Query("""
         SELECT COUNT(DISTINCT o.id)
         FROM Order o
