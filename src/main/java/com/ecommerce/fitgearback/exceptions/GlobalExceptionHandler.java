@@ -2,6 +2,7 @@ package com.ecommerce.fitgearback.exceptions;
 
 import com.ecommerce.fitgearback.dtos.others.ErrorDto;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -34,6 +35,14 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "Cart not found", ex.getMessage());
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Bad Request");
+        errorResponse.put("message", "Email already exists. Please use a different email address.");
+        errorResponse.put("timestamp",LocalDateTime.now().format(formatter));
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleProductNotFound(ProductNotFoundException ex) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "Product not found", ex.getMessage());
@@ -100,7 +109,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> error = new HashMap<>();
         error.put("error", "Internal Server Error");
         error.put("message", "An unexpected error occurred: " + ex.getMessage());
-        error.put("timestamp", LocalDateTime.now().toString());
+        error.put("timestamp",LocalDateTime.now().format(formatter));
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
@@ -142,7 +151,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("error", "Internal Server Error");
         errorResponse.put("message", "An unexpected error occurred: " + e.getMessage());
-        errorResponse.put("timestamp", LocalDateTime.now().toString());
+        errorResponse.put("timestamp", LocalDateTime.now().format(formatter));
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

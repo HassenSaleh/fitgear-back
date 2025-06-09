@@ -15,6 +15,8 @@ spring:
     secret: ${JWT_SECRET}
     accessTokenExpiration: 300000 # 5 minutes
     refreshTokenExpiration: 6048000 # ~70 days
+  cache:
+    type: simple
 chapa:
   secret-key: ${SECRET_KEY}
   public-key: ${PUBLIC_KEY}

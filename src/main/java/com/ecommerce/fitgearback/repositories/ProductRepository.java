@@ -52,6 +52,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.id IN :ids")
     List<Product> findAllByIdWithLock(@Param("ids") Set<Long> ids);
 
+    @Query("SELECT p FROM Product p ORDER BY RANDOM()")
+    Page<Product> findRandomProducts(Pageable pageable);
+
+
     Page<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
     Page<Product> findByPriceBetweenAndCategoryId(BigDecimal minPrice, BigDecimal maxPrice, Long categoryId, Pageable pageable);
 }

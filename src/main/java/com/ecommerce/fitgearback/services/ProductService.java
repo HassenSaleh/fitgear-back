@@ -15,10 +15,7 @@ import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -31,6 +28,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import org.springframework.cache.annotation.Cacheable;
+
 
 @AllArgsConstructor
 @Service
@@ -324,5 +325,12 @@ public class ProductService {
 
         Page<Product> products = productRepository.findAll(finalSpec, pageable);
         return productMapper.toProductResponsePage(products);
+    }
+
+    @Cacheable(value = "featuredProducts", key = "'featured'")
+    public Page<ProductResponse> getFeaturedProducts() {
+        Pageable pageable = PageRequest.of(0, 5); // Fetch 5 random products
+        Page<Product> products = productRepository.findRandomProducts(pageable);
+        return products.map(productMapper::toProductResponse);
     }
 }

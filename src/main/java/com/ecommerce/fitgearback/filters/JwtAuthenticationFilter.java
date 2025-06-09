@@ -38,7 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(@NotNull HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain)
             throws ServletException, IOException {
         var authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -67,12 +67,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String email = claims.getSubject();
             String role = claims.get("role", String.class);
             Object userIdClaim = claims.get("userId");
-            Long userId;
+            long userId;
 
             if (userIdClaim instanceof Number) {
                 userId = ((Number) userIdClaim).longValue();
             } else if (userIdClaim instanceof String) {
-                userId = Long.valueOf((String) userIdClaim);
+                userId = Long.parseLong((String) userIdClaim);
             } else {
                 LOGGER.warning("Invalid userId claim type: " + (userIdClaim != null ? userIdClaim.getClass() : "null"));
                 sendUnauthorizedResponse(response, "Invalid userId claim type");
@@ -87,7 +87,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
-            var auth = new UsernamePasswordAuthenticationToken(email, null, authorities); // Use email as principal
+            var auth = new UsernamePasswordAuthenticationToken(email, null, authorities);
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(auth);
             LOGGER.info("Authentication set for email: " + email + ", role: " + role);

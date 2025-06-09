@@ -18,7 +18,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
@@ -137,5 +136,11 @@ public class ProductController {
 
         Page<ProductResponse> products = productService.filterProducts(filters, pageable);
         return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/featured")
+    public ResponseEntity<Page<ProductResponse>> getFeaturedProducts() {
+        Page<ProductResponse> featuredProducts = productService.getFeaturedProducts();
+        return ResponseEntity.ok(featuredProducts);
     }
 }

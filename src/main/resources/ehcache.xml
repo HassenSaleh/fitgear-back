@@ -1,0 +1,6 @@
+<ehcache>
+    <cache name="featuredProducts"
+           maxEntriesLocalHeap="100"
+           timeToLiveSeconds="3600">
+    </cache>
+</ehcache>
