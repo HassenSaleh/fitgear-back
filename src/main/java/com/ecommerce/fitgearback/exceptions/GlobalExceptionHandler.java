@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("error", "Bad Request");
         errorResponse.put("message", ex.getConstraintViolations().iterator().next().getMessage());
-        errorResponse.put("timestamp", LocalDateTime.now());
+        errorResponse.put("timestamp", LocalDateTime.now().format(formatter));
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
