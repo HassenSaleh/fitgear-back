@@ -1,6 +1,7 @@
 package com.ecommerce.fitgearback.dtos.product;
 
 import com.ecommerce.fitgearback.enums.ProductStatus;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class ProductRequest {
     private String name;
+    @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
     private BigDecimal price;
     private Integer stock;

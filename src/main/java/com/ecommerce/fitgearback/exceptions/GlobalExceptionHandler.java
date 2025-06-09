@@ -1,6 +1,7 @@
 package com.ecommerce.fitgearback.exceptions;
 
 import com.ecommerce.fitgearback.dtos.others.ErrorDto;
+import jakarta.validation.ConstraintViolationException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -35,12 +36,28 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "Cart not found", ex.getMessage());
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolationException(ConstraintViolationException ex) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Bad Request");
+        errorResponse.put("message", ex.getConstraintViolations().iterator().next().getMessage());
+        errorResponse.put("timestamp", LocalDateTime.now());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("error", "Bad Request");
         errorResponse.put("message", "Email already exists. Please use a different email address.");
         errorResponse.put("timestamp",LocalDateTime.now().format(formatter));
+
+        String message = ex.getMessage().toLowerCase();
+        if (message.contains("value too long") && message.contains("description")) {
+            errorResponse.put("message", "Description exceeds maximum length of 500 characters.");
+        } else {
+            errorResponse.put("message", "Invalid input data. Please check your request.");
+        }
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
     @ExceptionHandler(ProductNotFoundException.class)
