@@ -41,16 +41,15 @@ public class  CustomerService {
         return customerMapper.toResponse(saved);
     }
 
-    public CustomerResponse updateCustomer(@NotNull Long id, @NotNull CustomerRequest request) {
+    public CustomerResponse updateCustomer(@NotNull Long id, @NotNull ProfileUpdateCustomer request) {
         Customer existing = customerRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
 
         existing.setFirstName(request.getFirstName());
         existing.setLastName(request.getLastName());
-        existing.setEmail(request.getEmail());
-        existing.setPassword(passwordEncoder.encode(request.getPassword()));
-
+        existing.setPhoneNumber(request.getPhoneNumber());
+        existing.setShippingAddress(request.getShippingAddress());
         Customer updated = customerRepository.save(existing);
         return customerMapper.toResponse(updated);
     }

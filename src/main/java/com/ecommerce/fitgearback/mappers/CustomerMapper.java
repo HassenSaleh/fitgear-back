@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 public interface CustomerMapper {
     Customer toCustomer(CustomerRequest customerRequest);
     CustomerResponse toResponse(Customer customer);
+
     List<CustomerResponse> toCustomerResponseList(List<Customer> customers);
 
     default Set<String> mapRoles(@NotNull Set<Role> roles) {

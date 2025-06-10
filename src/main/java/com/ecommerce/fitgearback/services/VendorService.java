@@ -65,15 +65,16 @@ public class VendorService {
     }
 
 
-    public VendorResponse updateVendor(Long id, @NotNull VendorRequest request) {
+    public VendorResponse updateVendor(Long id, @NotNull ProfileUpdateVendor request) {
         Vendor vendor = vendorRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with id: " + id));
 
         vendor.setFirstName(request.getFirstName());
         vendor.setLastName(request.getLastName());
-        vendor.setEmail(request.getEmail());
-
+        vendor.setCompanyAddress(request.getCompanyAddress());
+        vendor.setCompanyName(request.getCompanyName());
+        vendor.setContactNumber(request.getContactNumber());
         Vendor updatedVendor = vendorRepository.save(vendor);
         return vendorMapper.toResponse(updatedVendor);
     }

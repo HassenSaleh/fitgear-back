@@ -77,7 +77,7 @@ public class CustomerController {
 
     @PreAuthorize(value = "hasRole('CUSTOMER')")
     @PutMapping("/{id}")
-    public ResponseEntity<CustomerResponse> updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerRequest request) {
+    public ResponseEntity<CustomerResponse> updateCustomer(@PathVariable Long id, @Valid @RequestBody ProfileUpdateCustomer request) {
         CustomerResponse updatedCustomer = customerService.updateCustomer(id, request);
         if (updatedCustomer == null) {
             return ResponseEntity.notFound().build();

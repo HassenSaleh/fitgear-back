@@ -86,7 +86,7 @@ public class VendorController {
 
     @PreAuthorize(value = "hasRole('VENDOR')")
     @PutMapping("/{id}")
-    public ResponseEntity<VendorResponse> updateVendor(@PathVariable Long id, @Valid @RequestBody VendorRequest request) {
+    public ResponseEntity<VendorResponse> updateVendor(@PathVariable Long id, @Valid @RequestBody ProfileUpdateVendor request) {
         VendorResponse updatedVendor = vendorService.updateVendor(id, request);
         if (updatedVendor == null) {
             return ResponseEntity.notFound().build();
