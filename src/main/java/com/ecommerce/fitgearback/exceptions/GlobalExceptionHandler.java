@@ -51,13 +51,6 @@ public class GlobalExceptionHandler {
         errorResponse.put("error", "Bad Request");
         errorResponse.put("message", "Email already exists. Please use a different email address.");
         errorResponse.put("timestamp",LocalDateTime.now().format(formatter));
-
-        String message = ex.getMessage().toLowerCase();
-        if (message.contains("value too long") && message.contains("description")) {
-            errorResponse.put("message", "Description exceeds maximum length of 500 characters.");
-        } else {
-            errorResponse.put("message", "Invalid input data. Please check your request.");
-        }
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
     @ExceptionHandler(ProductNotFoundException.class)
