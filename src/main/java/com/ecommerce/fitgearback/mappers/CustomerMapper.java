@@ -2,11 +2,12 @@ package com.ecommerce.fitgearback.mappers;
 
 import com.ecommerce.fitgearback.dtos.customer.CustomerRequest;
 import com.ecommerce.fitgearback.dtos.customer.CustomerResponse;
+import com.ecommerce.fitgearback.dtos.customer.UpdateCustomerRequest;
+import com.ecommerce.fitgearback.dtos.customer.UpdateCustomerResponse;
 import com.ecommerce.fitgearback.models.Customer;
 import com.ecommerce.fitgearback.models.Role;
 import org.jetbrains.annotations.NotNull;
 import org.mapstruct.Mapper;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,6 +17,9 @@ public interface CustomerMapper {
     Customer toCustomer(CustomerRequest customerRequest);
     CustomerResponse toResponse(Customer customer);
 
+
+    Customer toUpdateCustomer(UpdateCustomerRequest customerRequest);
+    UpdateCustomerResponse toUpdateResponse(Customer customer);
     List<CustomerResponse> toCustomerResponseList(List<Customer> customers);
 
     default Set<String> mapRoles(@NotNull Set<Role> roles) {

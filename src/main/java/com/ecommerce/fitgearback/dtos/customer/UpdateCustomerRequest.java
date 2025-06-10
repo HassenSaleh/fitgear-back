@@ -10,10 +10,12 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileUpdateCustomer {
+public class UpdateCustomerRequest {
+    @NotBlank(message = "First name is required")
     private String firstName;
+    @NotBlank(message = "Last name is required")
     private String lastName;
-    @NotBlank(message = "Phone number is required")
+    @NotBlank(message = "Phone number is required!")
     private String phoneNumber;
     @NotBlank(message = "Shipping address is required")
     private String shippingAddress;

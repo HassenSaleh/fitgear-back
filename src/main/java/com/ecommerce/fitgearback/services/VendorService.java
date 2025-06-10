@@ -65,18 +65,21 @@ public class VendorService {
     }
 
 
-    public VendorResponse updateVendor(Long id, @NotNull ProfileUpdateVendor request) {
-        Vendor vendor = vendorRepository
+    public UpdateVendorResponse updateVendor(Long id, @NotNull UpdateVendorRequest request) {
+        Vendor existing = vendorRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with id: " + id));
 
-        vendor.setFirstName(request.getFirstName());
-        vendor.setLastName(request.getLastName());
-        vendor.setCompanyAddress(request.getCompanyAddress());
-        vendor.setCompanyName(request.getCompanyName());
-        vendor.setContactNumber(request.getContactNumber());
-        Vendor updatedVendor = vendorRepository.save(vendor);
-        return vendorMapper.toResponse(updatedVendor);
+        existing.setFirstName(request.getFirstName());
+        existing.setLastName(request.getLastName());
+        existing.setEmail(existing.getEmail());
+        existing.setPassword(existing.getPassword());
+        existing.setContactNumber(request.getContactNumber());
+        System.out.println(request.getContactNumber());
+        existing.setCompanyAddress(request.getCompanyAddress());
+        existing.setCompanyName(request.getCompanyName());
+        Vendor updated = vendorRepository.save(existing);
+        return vendorMapper.toUpdateResponse(updated);
     }
 
     public void deleteVendor(Long id) {

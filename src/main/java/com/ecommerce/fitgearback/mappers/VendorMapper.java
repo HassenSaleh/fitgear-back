@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 public interface VendorMapper {
     Vendor toVendor(VendorRequest vendorRequest);
     VendorResponse toResponse(Vendor vendor);
+
+    Vendor toUpdateVendor(UpdateVendorRequest vendorRequest);
+    UpdateVendorResponse toUpdateResponse(Vendor vendor);
     default Set<String> mapRoles(@NotNull Set<Role> roles) {
         return roles.stream()
                 .map(Role::getName)

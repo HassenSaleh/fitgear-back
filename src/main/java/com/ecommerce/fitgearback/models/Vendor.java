@@ -26,7 +26,6 @@ public class Vendor implements JwtUser {
 
     @Column(nullable = false, unique = true, name = "email")
     private String email;
-
     @Column(nullable = false, name = "password")
     private String password;
 

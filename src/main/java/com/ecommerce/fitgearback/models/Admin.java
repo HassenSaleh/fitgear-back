@@ -2,6 +2,7 @@ package com.ecommerce.fitgearback.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,9 @@ public class Admin implements JwtUser {
 
     @Column(nullable = false, name = "password")
     private String password;
+
+    @NotBlank(message = "Phone number is required")
+    private String phoneNumber;
 
     @Column(name = "department")
     private String department;

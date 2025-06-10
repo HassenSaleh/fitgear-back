@@ -41,7 +41,7 @@ public class  CustomerService {
         return customerMapper.toResponse(saved);
     }
 
-    public CustomerResponse updateCustomer(@NotNull Long id, @NotNull ProfileUpdateCustomer request) {
+    public UpdateCustomerResponse updateCustomer(@NotNull Long id, @NotNull UpdateCustomerRequest request) {
         Customer existing = customerRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
@@ -51,7 +51,7 @@ public class  CustomerService {
         existing.setPhoneNumber(request.getPhoneNumber());
         existing.setShippingAddress(request.getShippingAddress());
         Customer updated = customerRepository.save(existing);
-        return customerMapper.toResponse(updated);
+        return customerMapper.toUpdateResponse(updated);
     }
     public void deleteCustomer(Long id) {
         if (!customerRepository.existsById(id)) {
