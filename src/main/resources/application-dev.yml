@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/fitgearback
     username: postgres
-    password: salmen25
+    password: newpassword
     driver-class-name: org.postgresql.Driver
   jpa:
     show-sql: true
