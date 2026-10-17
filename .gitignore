@@ -12,7 +12,11 @@ target/
 .settings
 .springBeans
 .sts4-cache
-
+.env
+.env.*
+!.env.example
+Uploads/
+uploads/
 ### IntelliJ IDEA ###
 .idea
 *.iws
@@ -31,7 +35,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-.env
-.env.*
-!.env.example
